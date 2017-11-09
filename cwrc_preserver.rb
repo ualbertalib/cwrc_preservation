@@ -1,4 +1,10 @@
 #!/usr/bin/env ruby
+#/ Usage: <progname> [options]...
+#/ options
+#/   -h --help  display help
+#/   -d --debug run in debug mode
+#/   -s --start <timestamp> retrieve sub-set defined by modified timestamp
+
 require 'yaml'
 require 'net/http'
 require 'json'
@@ -6,6 +12,8 @@ require 'swift_ingest'
 require 'http-cookie'
 require 'json'
 require 'swift_ingest'
+require 'optparse'
+require 'logger'
 
 module CWRCPerserver
 
@@ -26,8 +34,8 @@ module CWRCPerserver
     login_request = Net::HTTP::Post.new(URI.parse("https://#{@cwrc_hostname}#{@cwrc_login_path}"))
     login_request.content_type = "application/json"
     login_request.body = JSON.dump({
-                                       "username" => "ualbertalib",
-                                       "password" => "m2ey8V2xnJM22kiN"
+                                       "username" => ENV['CWRC_USERNAME'],
+                                       "password" => ENV['CWRC_PASSWORD']
                                    })
     login_response = Net::HTTP.start(@cwrc_hostname, @cwrc_port, @cwrc_options) do |http|
       http.request(login_request)
@@ -54,13 +62,20 @@ module CWRCPerserver
     end
   end
 
-  def self.get_cwrc_objs(cookie)
-    all_obj_uri = URI.parse("https://#{@cwrc_hostname}/services/bagit_extension/audit")
+  def self.get_cwrc_objs(cookie, timestamp)
+    if timestamp.length > 0
+      audit_str = "audit_by_date/#{timestamp}"
+    else
+      audit_str = "audit"
+    end
+
+    all_obj_uri = URI.parse("https://#{@cwrc_hostname}/services/bagit_extension/#{audit_str}")
     all_obj_req = Net::HTTP::Get.new(all_obj_uri)
     all_obj_req['Cookie'] = cookie
     all_obj_response = Net::HTTP.start(@cwrc_hostname, @cwrc_port, @cwrc_options) do |http|
       http.request(all_obj_req)
     end
+    all_obj_response.body.slice! timestamp
     (JSON.parse(all_obj_response.body))['objects']
   end
 
@@ -78,6 +93,23 @@ module CWRCPerserver
     end if obj_response.code.to_s == '200'
    end
 
+  # process command line arguments
+  debug_level = false
+  start_dt    = ""
+
+  file = __FILE__
+  ARGV.options do |opts|
+    opts.on("-d", "--debug")             { debug_level = true }
+    opts.on("-s", "--start=val", String) { |val| start_dt = val }
+    opts.on_tail("-h", "--help")         { exec "grep ^#/<'#{file}'|cut -c5-" }
+    opts.parse!
+  end
+
+  # setup logger and log level
+  $log = Logger.new(STDOUT)
+  $log.level = Logger::DEBUG if debug_level
+
+  $log.debug("start datetime: #{start_dt}")
 
   # set environment
   set_env
@@ -93,7 +125,7 @@ module CWRCPerserver
 
   # get connection cookie
   cookie = get_cookie()
-
+  $log.debug("connecion cookie: #{cookie}")
 
   # connect to swift storage
   swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
@@ -107,12 +139,14 @@ module CWRCPerserver
   raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
-  cwrc_objs=  get_cwrc_objs(cookie)
+  cwrc_objs=  get_cwrc_objs(cookie, start_dt)
+  $log.debug("Number of objects to precess: #{cwrc_objs.length}")
 
   # for each cwrc object
   cwrc_objs.each do |cwrc_obj|
 
     cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
+    $log.debug("Processing file: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp'].to_s}")
 
     # check if file has been deposited
     swift_file = swift_depositer.get_file_from_swit(cwrc_file, cwrc_swift_container )
@@ -121,12 +155,15 @@ module CWRCPerserver
     if swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
       #download object from cwrc
+      $log.debug("File: #{cwrc_file} is not in swift downloding and depositing it")
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
       raise CWRCArchivingError if !File.exist?(cwrc_file)
 
       # deposit into swift an remove it
       swift_depositer.deposit_file(cwrc_file, cwrc_swift_container, {timestamp: cwrc_obj['timestamp'].to_s})
       FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
+
+      $log.debug("File: #{cwrc_file} deposited in swift successfully")
     end
 
   end
