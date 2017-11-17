@@ -1,10 +1,8 @@
 #!/usr/bin/env ruby
-
 require 'yaml'
 require 'net/http'
 require 'json'
 require 'http-cookie'
-
 
 module CWRCPerserver
 

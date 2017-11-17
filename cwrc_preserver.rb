@@ -1,43 +1,39 @@
 #!/usr/bin/env ruby
-#/ Usage: <progname> [options]...
-#/ options
-#/   -h --help  display help
-#/   -d --debug run in debug mode
-#/   -s --start <timestamp> retrieve sub-set defined by modified timestamp
-
+#   Usage: <progname> [options]...
+#   options
+#    -h --help  display help
+#    -d --debug run in debug mode
+#    -s --start <timestamp> retrieve sub-set defined by modified timestamp
 require 'swift_ingest'
 require 'optparse'
 require 'logger'
 require_relative 'cwrc_common'
 
 module CWRCPerserver
-
-  class CWRCArchivingError < StandardError; end
-
   # process command line arguments
   debug_level = false
-  start_dt    = ""
+  start_dt = ''
 
   file = __FILE__
   ARGV.options do |opts|
-    opts.on("-d", "--debug")             { debug_level = true }
-    opts.on("-s", "--start=val", String) { |val| start_dt = val }
-    opts.on_tail("-h", "--help")         { exec "grep ^#/<'#{file}'|cut -c5-" }
+    opts.on('-d', '--debug')             { debug_level = true }
+    opts.on('-s', '--start=val', String) { |val| start_dt = val }
+    opts.on_tail('-h', '--help')         { exec "grep ^#[[:space:]]<'#{file}'|cut -c5-" }
     opts.parse!
   end
 
   # setup logger and log level
-  $log = Logger.new(STDOUT)
-  $log.level = Logger::DEBUG if debug_level
+  log = Logger.new(STDOUT)
+  log.level = Logger::DEBUG if debug_level
 
-  $log.debug("Retrieving all objects modified since: #{start_dt}")
+  log.debug("Retrieving all objects modified since: #{start_dt}")
 
   # set environment
   set_env
 
   # get connection cookie
-  cookie = get_cookie()
-  $log.debug("Using connecion cookie: #{cookie}")
+  cookie = get_cookie
+  log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
   swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
@@ -51,33 +47,28 @@ module CWRCPerserver
   raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
-  cwrc_objs=  get_cwrc_objs(cookie, start_dt)
-  $log.debug("Number of objects to precess: #{cwrc_objs.length}")
+  cwrc_objs = get_cwrc_objs(cookie, start_dt)
+  log.debug("Number of objects to precess: #{cwrc_objs.length}")
 
   # for each cwrc object
   cwrc_objs.each do |cwrc_obj|
-
     cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
-    $log.debug("Processing file: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp'].to_s}")
+    log.debug("Processing file: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited
-    swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'] )
+    swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
 
     # if object is not is swift or we have newer object
-    if swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
+    next unless swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
-      #download object from cwrc
-      $log.debug("File: #{cwrc_file} is not in swift downloding and depositing it")
-      download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
-      raise CWRCArchivingError if !File.exist?(cwrc_file)
+    # download object from cwrc
+    log.debug("File: #{cwrc_file} is not in swift downloding and depositing it")
+    download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
+    raise CWRCArchivingError unless File.exist?(cwrc_file)
 
-      # deposit into swift an remove it
-      swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], {timestamp: cwrc_obj['timestamp'].to_s})
-      FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-
-      $log.debug("File: #{cwrc_file} deposited in swift successfully")
-    end
-
+    # deposit into swift an remove it
+    swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
+    FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
+    log.debug("File: #{cwrc_file} deposited in swift successfully")
   end
-
 end
