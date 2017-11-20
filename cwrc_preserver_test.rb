@@ -32,7 +32,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('cookie') do
       assert_nothing_raised do
         CWRCPerserver.set_env
-        refute_empty CWRCPerserver.get_cookie
+        refute_empty CWRCPerserver.cookie
       end
       assert File.exist?('connection_cookie.txt')
     end
@@ -42,7 +42,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('all_objects') do
       assert_nothing_raised do
         CWRCPerserver.set_env
-        cookie = CWRCPerserver.get_cookie
+        cookie = CWRCPerserver.cookie
         cwrc_objs = CWRCPerserver.get_cwrc_objs(cookie, '')
         refute_empty cwrc_objs
         assert cwrc_objs.count == 99_396
@@ -54,7 +54,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('updated_objects') do
       assert_nothing_raised do
         CWRCPerserver.set_env
-        cookie = CWRCPerserver.get_cookie
+        cookie = CWRCPerserver.cookie
         cwrc_objs = CWRCPerserver.get_cwrc_objs(cookie, '2017-01-01T15:29:21.374Z')
         refute_empty cwrc_objs
         assert cwrc_objs.count == 50
@@ -68,7 +68,7 @@ class VCRTest < Test::Unit::TestCase
       cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
       assert_nothing_raised do
         CWRCPerserver.set_env
-        cookie = CWRCPerserver.get_cookie
+        cookie = CWRCPerserver.cookie
         CWRCPerserver.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
       end
       assert File.exist?(cwrc_file)

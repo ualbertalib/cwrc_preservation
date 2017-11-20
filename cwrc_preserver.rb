@@ -32,7 +32,7 @@ module CWRCPerserver
   set_env
 
   # get connection cookie
-  cookie = get_cookie
+  cookie = cookie
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
