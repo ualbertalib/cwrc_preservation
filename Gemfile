@@ -1,0 +1,10 @@
+source 'https://rubygems.org'
+
+gem 'bundler', '~> 1.14'
+gem 'json'
+gem 'test'
+gem 'swift_ingest'
+gem 'logger'
+gem 'http-cookie'
+gem 'rubocop', '~> 0.45'
+gem 'vcr', '~> 3.0'
