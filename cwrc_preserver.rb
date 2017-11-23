@@ -10,7 +10,6 @@ require 'logger'
 require 'time'
 require_relative 'cwrc_common'
 
-
 module CWRCPerserver
   # process command line arguments
   debug_level = false
@@ -27,7 +26,6 @@ module CWRCPerserver
   # setup logger and log level
   log = Logger.new(STDOUT)
   log.level = Logger::DEBUG if debug_level
-
   log.debug("Retrieving all objects modified since: #{start_dt}")
 
   # set environment
@@ -77,13 +75,12 @@ module CWRCPerserver
     download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     raise CWRCArchivingError unless File.exist?(cwrc_file)
     file_size = File.size(cwrc_file)
-    log.debug("SIZE: #{'%.2f' % (file_size.to_f / 2**20)} MB")
+    log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
 
     # deposit into swift an remove it
     swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-    deposit_rate = '%.2f' % ((file_size.to_f/2**20)/(Time.now - start_time))
+    deposit_rate = format('%.2f', ((file_size.to_f / 2**20) / (Time.now - start_time)))
     log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully DEPOSIT RATE #{deposit_rate} MB/sec")
-
   end
 end
