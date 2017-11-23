@@ -64,7 +64,6 @@ module CWRCPerserver
   cwrc_objs.each do |cwrc_obj|
     cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
     log.debug("PROCESSING: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp']}")
-    total_deposited = 0
     start_time = Time.now
 
     # check if file has been deposited
@@ -77,14 +76,14 @@ module CWRCPerserver
     log.debug("DOWNLOADING: #{cwrc_file}")
     download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     raise CWRCArchivingError unless File.exist?(cwrc_file)
-    file_size = File.size("cwrc_file")
+    file_size = File.size(cwrc_file)
     log.debug("SIZE: #{'%.2f' % (file_size.to_f / 2**20)} MB")
 
     # deposit into swift an remove it
     swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-    total_deposited = total_deposited + file_size
-    log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully DEPOSIT RATE #{'%.2f' % (total_deposited.to_f/2**20)} MB/sec")
+    deposit_rate = '%.2f' % ((file_size.to_f/2**20)/(Time.now - start_time))
+    log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully DEPOSIT RATE #{deposit_rate} MB/sec")
 
   end
 end
