@@ -43,7 +43,7 @@ module CWRCPerserver
   log.debug("SWIFT  project_name #{ENV['SWIFT_PROJECT_NAME']}")
   log.debug("SWIFT  project_domain_name #{ENV['SWIFT_PROJECT_DOMAIN_NAME']}")
   log.debug("SWIFT  project #{ENV['SWIFT_PROJECT']}")
-  
+
   swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
                                               password: ENV['SWIFT_PASSWORD'],
                                               tenant: ENV['SWIFT_TENANT'],
@@ -61,7 +61,7 @@ module CWRCPerserver
   # for each cwrc object
   cwrc_objs.each do |cwrc_obj|
     cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
-    log.debug("Processing file: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp']}")
+    log.debug("PROCESSING: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited
     swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
@@ -70,13 +70,13 @@ module CWRCPerserver
     next unless swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
     # download object from cwrc
-    log.debug("File: #{cwrc_file} is not in swift downloding and depositing it")
+    log.debug("DOWNLOADING: #{cwrc_file} is not in swift downloding....")
     download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     raise CWRCArchivingError unless File.exist?(cwrc_file)
 
     # deposit into swift an remove it
     swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-    log.debug("File: #{cwrc_file} deposited in swift successfully")
+    log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully")
   end
 end
