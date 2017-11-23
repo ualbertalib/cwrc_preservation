@@ -32,10 +32,18 @@ module CWRCPerserver
   set_env
 
   # get connection cookie
-  cookie = cookie
+  cookie = retrieve_cookie
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
+  log.debug("SWIFT username #{ENV['SWIFT_USERNAME']}")
+  log.debug("SWIFT password #{ENV['SWIFT_PASSWORD']}")
+  log.debug("SWIFT  tenant #{ENV['SWIFT_TENANT']}")
+  log.debug("SWIFT  auth_url #{ENV['SWIFT_AUTH_URL']}")
+  log.debug("SWIFT  project_name #{ENV['SWIFT_PROJECT_NAME']}")
+  log.debug("SWIFT  project_domain_name #{ENV['SWIFT_PROJECT_DOMAIN_NAME']}")
+  log.debug("SWIFT  project #{ENV['SWIFT_PROJECT']}")
+  
   swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
                                               password: ENV['SWIFT_PASSWORD'],
                                               tenant: ENV['SWIFT_TENANT'],

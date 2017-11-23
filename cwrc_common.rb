@@ -7,7 +7,7 @@ require 'http-cookie'
 module CWRCPerserver
   class CWRCArchivingError < StandardError; end
 
-  def self.cookie
+  def self.retrieve_cookie
     # Initialize a cookie jar
     jar = HTTP::CookieJar.new
 
