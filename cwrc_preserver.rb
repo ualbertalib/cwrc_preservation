@@ -36,13 +36,6 @@ module CWRCPerserver
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
-  log.debug("SWIFT username #{ENV['SWIFT_USERNAME']}")
-  log.debug("SWIFT password #{ENV['SWIFT_PASSWORD']}")
-  log.debug("SWIFT  tenant #{ENV['SWIFT_TENANT']}")
-  log.debug("SWIFT  auth_url #{ENV['SWIFT_AUTH_URL']}")
-  log.debug("SWIFT  project_name #{ENV['SWIFT_PROJECT_NAME']}")
-  log.debug("SWIFT  project_domain_name #{ENV['SWIFT_PROJECT_DOMAIN_NAME']}")
-  log.debug("SWIFT  project #{ENV['SWIFT_PROJECT']}")
 
   swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
                                               password: ENV['SWIFT_PASSWORD'],
@@ -72,7 +65,11 @@ module CWRCPerserver
 
     # download object from cwrc
     log.debug("DOWNLOADING: #{cwrc_file}")
-    download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
+    begin
+      download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
+    rescue Net::ReadTimeout
+      log.error("ERROR DOWNLOADING: #{cwrc_file}")
+    end
     raise CWRCArchivingError unless File.exist?(cwrc_file)
     file_size = File.size(cwrc_file)
     log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
