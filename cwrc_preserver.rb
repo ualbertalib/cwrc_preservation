@@ -70,7 +70,7 @@ module CWRCPerserver
     rescue Net::ReadTimeout
       log.error("ERROR DOWNLOADING: #{cwrc_file}")
     end
-    raise CWRCArchivingError unless File.exist?(cwrc_file)
+    
     file_size = File.size(cwrc_file)
     log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
 
