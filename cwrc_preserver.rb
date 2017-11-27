@@ -67,20 +67,15 @@ module CWRCPerserver
     file_size = File.size(cwrc_file)
     log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
 
-    # deposit into swift an remove file, handle swift disconnects
-    retries = [10, 20, 30]
+    # deposit into swift an remove file, handle swift errors
     begin
       swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
-    rescue OpenStack::Exception::Other
-      delay = retries.shift
-      raise unless delay
-      log.error("SWIFT DISCONNECT, reconnection in #{delay} seconds")
-      sleep delay
-      swift_depositer = connect_to_swift
-      retry
+    rescue OpenStack::Exception => e
+      log.error("SWIFT DEPOSITING ERROR #{e.message}")
+      next
     end
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
     deposit_rate = format('%.2f', ((file_size.to_f / 2**20) / (Time.now - start_time)))
-    log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully DEPOSIT RATE #{deposit_rate} MB/sec")
+    log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{deposit_rate} MB/sec")
   end
 end
