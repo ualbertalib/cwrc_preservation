@@ -70,7 +70,7 @@ module CWRCPerserver
     # deposit into swift an remove file, handle swift errors
     begin
       swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
-    rescue OpenStack::Exception => e
+    rescue => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
       next
     end
