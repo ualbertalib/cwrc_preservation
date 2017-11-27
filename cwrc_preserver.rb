@@ -69,8 +69,9 @@ module CWRCPerserver
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     rescue Net::ReadTimeout
       log.error("ERROR DOWNLOADING: #{cwrc_file}")
+      next
     end
-    
+
     file_size = File.size(cwrc_file)
     log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
 
