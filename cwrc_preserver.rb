@@ -30,21 +30,14 @@ module CWRCPerserver
 
   # set environment
   set_env
+  http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
 
   # get connection cookie
   cookie = retrieve_cookie
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
-
-  swift_depositer = SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
-                                              password: ENV['SWIFT_PASSWORD'],
-                                              tenant: ENV['SWIFT_TENANT'],
-                                              auth_url: ENV['SWIFT_AUTH_URL'],
-                                              project_name: ENV['SWIFT_PROJECT_NAME'],
-                                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
-                                              project: ENV['SWIFT_PROJECT'])
-
+  swift_depositer = connect_to_swift
   raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
@@ -71,12 +64,21 @@ module CWRCPerserver
       log.error("ERROR DOWNLOADING: #{cwrc_file}")
       next
     end
-
     file_size = File.size(cwrc_file)
     log.debug("SIZE: #{format('%.2f', (file_size.to_f / 2**20))} MB")
 
-    # deposit into swift an remove it
-    swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
+    # deposit into swift an remove file, handle swift disconnects
+    retries = [10, 20, 30]
+    begin
+      swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
+    rescue OpenStack::Exception::Other
+      delay = retries.shift
+      raise unless delay
+      log.error("SWIFT DISCONNECT, reconnection in #{delay} seconds")
+      sleep delay
+      swift_depositer = connect_to_swift
+      retry
+    end
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
     deposit_rate = format('%.2f', ((file_size.to_f / 2**20) / (Time.now - start_time)))
     log.debug("DEPOSITING: #{cwrc_file} deposited in swift successfully DEPOSIT RATE #{deposit_rate} MB/sec")

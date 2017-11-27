@@ -52,7 +52,6 @@ module CWRCPerserver
                 else
                   'audit'
                 end
-
     all_obj_uri = URI.parse("https://#{ENV['CWRC_HOSTNAME']}/services/bagit_extension/#{audit_str}")
     all_obj_req = Net::HTTP::Get.new(all_obj_uri)
     all_obj_req['Cookie'] = cookie
@@ -69,8 +68,9 @@ module CWRCPerserver
     obj_req = Net::HTTP::Get.new(URI.parse(obj_path))
     obj_req['Cookie'] = cookie
     retries = [10, 20, 30]
+    http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
     begin
-      obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i, use_ssl: true) do |http|
+      obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i, use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request(obj_req)
       end
     rescue Net::ReadTimeout
@@ -82,5 +82,16 @@ module CWRCPerserver
     open(cwrc_file, 'wb') do |file|
       file.write(obj_response.body)
     end
+  end
+
+  def self.connect_to_swift
+    SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
+                              password: ENV['SWIFT_PASSWORD'],
+                              tenant: ENV['SWIFT_TENANT'],
+                              auth_url: ENV['SWIFT_AUTH_URL'],
+                              project_name: ENV['SWIFT_PROJECT_NAME'],
+                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
+                              project: ENV['SWIFT_PROJECT'])
+
   end
 end
