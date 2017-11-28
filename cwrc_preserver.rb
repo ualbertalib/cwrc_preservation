@@ -24,7 +24,7 @@ module CWRCPerserver
   end
 
   # load exception files
-  except_file = 'swift_failed.txt'
+  except_file = 'swift_failed_objs.txt'
   except_list = Array.new
   File.open(except_file).each { |line| except_list << line } if File.exist?(except_file)
 
@@ -60,7 +60,7 @@ module CWRCPerserver
     log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
     start_time = Time.now
 
-    # check if file has been deposited, handle open stack bug causing exception in openstack/connection 
+    # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
@@ -87,7 +87,7 @@ module CWRCPerserver
       swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     rescue => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
-      File.open('swift_failed.txt', 'a') { |file| file.write("#{cwrc_file_str}\n") }  # save obj name to file
+      File.open(except_file, 'a') { |file| file.write("#{cwrc_file_str}\n") }  # save obj name to file
       FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       next
     end
