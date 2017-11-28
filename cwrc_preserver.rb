@@ -55,16 +55,21 @@ module CWRCPerserver
     cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
 
     # if obj in exception list skip it
-    next if except_list.include?(cwrc_file_str) || cwrc_file_str.length == 0
+    next if except_list.include?(cwrc_file_str)
 
     log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
     start_time = Time.now
 
-    # check if file has been deposited
-    swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
+    # check if file has been deposited, handle open stack bug causing exception in openstack/connection 
+    force_deposit = false
+    begin
+      swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
+    rescue => e
+      force_deposit = true
+    end
 
     # if object is not is swift or we have newer object
-    next unless swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
+    next unless force_deposit || swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
     # download object from cwrc
     log.debug("DOWNLOADING: #{cwrc_file}")
@@ -82,7 +87,7 @@ module CWRCPerserver
       swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     rescue => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
-      File.open('swift_failed.txt', 'a') { |file| file.write(cwrc_file_str) }  # save obj name to file
+      File.open('swift_failed.txt', 'a') { |file| file.write("#{cwrc_file_str}\n") }  # save obj name to file
       FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       next
     end
