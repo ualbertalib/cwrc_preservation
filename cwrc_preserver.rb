@@ -23,6 +23,11 @@ module CWRCPerserver
     opts.parse!
   end
 
+  # load exception files
+  except_file = 'swift_failed.txt'
+  except_list = Array.new
+  File.open(except_file).each { |line| except_list << line } if File.exist?(except_file)
+
   # setup logger and log level
   log = Logger.new(STDOUT)
   log.level = Logger::DEBUG if debug_level
@@ -46,8 +51,13 @@ module CWRCPerserver
 
   # for each cwrc object
   cwrc_objs.each do |cwrc_obj|
-    cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
-    log.debug("PROCESSING: #{cwrc_file}, modified timestamp #{cwrc_obj['timestamp']}")
+    cwrc_file_str = "#{cwrc_obj['pid'].to_s}"
+    cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
+
+    # if obj in exception list skip it
+    next if except_list.include?(cwrc_file_str) || cwrc_file_str.length == 0
+
+    log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
     start_time = Time.now
 
     # check if file has been deposited
@@ -72,8 +82,12 @@ module CWRCPerserver
       swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
     rescue => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
+      File.open('swift_failed.txt', 'a') { |file| file.write(cwrc_file_str) }  # save obj name to file
+      FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       next
     end
+
+    # cleanup - remove file and print statistics
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
     deposit_rate = format('%.2f', ((file_size.to_f / 2**20) / (Time.now - start_time)))
     log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{deposit_rate} MB/sec")
