@@ -70,7 +70,8 @@ module CWRCPerserver
     retries = [10, 20, 30]
     http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
     begin
-      obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i, use_ssl: true, read_timeout: http_read_timeout) do |http|
+      obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
+                                     use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request(obj_req)
       end
     rescue Net::ReadTimeout
@@ -92,6 +93,5 @@ module CWRCPerserver
                               project_name: ENV['SWIFT_PROJECT_NAME'],
                               project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
                               project: ENV['SWIFT_PROJECT'])
-
   end
 end
