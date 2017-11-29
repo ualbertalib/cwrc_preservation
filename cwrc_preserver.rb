@@ -84,7 +84,7 @@ module CWRCPerserver
       log.error("ERROR DOWNLOADING: #{cwrc_file}")
       next
     end
-    file_size = File.size(cwrc_file).to_f / 2**200
+    file_size = File.size(cwrc_file).to_f / 2**20
     fs_str = format('%.3f', file_size)
     log.debug("SIZE: #{fs_str} MB")
 
