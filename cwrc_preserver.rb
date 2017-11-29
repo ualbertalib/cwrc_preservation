@@ -26,19 +26,17 @@ module CWRCPerserver
     opts.parse!
   end
 
+  # set environment
+  set_env
+
   # load exception files
   except_file = ENV['SWIFT_ARCHIVE_FAILED']
   success_file = ENV['SWIFT_ARCHIVED_OK']
-  except_list = []
-  File.open(except_file).each { |line| except_list << line } if File.exist?(except_file)
 
   # setup logger and log level
   log = Logger.new(STDOUT)
   log.level = Logger::DEBUG if debug_level
   log.debug("Retrieving all objects modified since: #{start_dt}")
-
-  # set environment
-  set_env
 
   # get connection cookie
   cookie = retrieve_cookie
@@ -50,7 +48,9 @@ module CWRCPerserver
 
   # get list of all objects from cwrc
   cwrc_objs = if re_process
-                Hash(except_list.collect { |v| ['pid', v] })
+                rp_list = []
+                File.open(ENV['CWRC_REPROCESS']).each { |line| rp_list << line } if File.exist?(ENV['CWRC_REPROCESS'])
+                Hash(rp_list.collect { |v| ['pid', v] })
               else
                 get_cwrc_objs(cookie, start_dt)
               end
@@ -60,9 +60,6 @@ module CWRCPerserver
   cwrc_objs.each do |cwrc_obj|
     cwrc_file_str = cwrc_obj['pid'].to_s
     cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
-
-    # if obj in exception list skip it
-    next if except_list.include?(cwrc_file_str)
 
     log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
     start_time = Time.now
@@ -88,7 +85,7 @@ module CWRCPerserver
       next
     end
     file_size = File.size(cwrc_file).to_f / 2**200
-    fs_str = file_size.round(2).to_s
+    fs_str = ormat('%.3f', file_size)
     log.debug("SIZE: #{fs_str} MB")
 
     # deposit into swift an remove file, handle swift errors
@@ -103,7 +100,7 @@ module CWRCPerserver
 
     # cleanup - remove file and print statistics
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-    dp_rate = format('%.2f', (file_size / (Time.now - start_time)))
+    dp_rate = format('%.3f', (file_size / (Time.now - start_time)))
     log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} MB/sec")
     File.open(success_file, 'a') { |ok_file| ok_file.write("#{cwrc_file_str} #{fs_str} MB #{dp_rate} MB/sec\n") }
   end
