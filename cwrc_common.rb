@@ -67,7 +67,7 @@ module CWRCPerserver
     obj_path = "https://#{ENV['CWRC_HOSTNAME']}/islandora/object/#{cwrc_obj['pid']}/manage/bagit_extension"
     obj_req = Net::HTTP::Get.new(URI.parse(obj_path))
     obj_req['Cookie'] = cookie
-    retries = [10, 20, 30]
+    retries = [10, 30, 90]
     http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
     begin
       obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
@@ -78,6 +78,7 @@ module CWRCPerserver
       delay = retries.shift
       raise unless delay
       sleep delay
+      http_read_timeout = http_read_timeout*2
       retry
     end
     open(cwrc_file, 'wb') do |file|
