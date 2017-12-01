@@ -28,6 +28,8 @@ cwrc_preserver.rb [options]
  -s <timestamp> --start=<timestamp>  to retieve objects that have been modified since <timestamp>
  -h --help display usage
  -r --reprocess re-process cwrc objects specified in re-proces file (specified secret.yml)
+
+cwrc_preserver.rb [options] | tee mylogfile.txt
 ```
    cwrc_preserver.rb will create two output files (in addition to displaying messages to STDOUT), these files set in
    secret.yml file. First file swift_archived_objs.txt that lists all CWRC successfully archived object,
@@ -35,6 +37,10 @@ cwrc_preserver.rb [options]
    failed to archive in SWIFT, usually they need to be re-processed again (hence -r parameter)
 
  - to reconcile archived objects between swift and cwrc run cwrc_reconcile.rb.
+
+```shell
+cwrc_reconcile.rb
+```
    This program will print to STDOUT all CWRC objects that are in CWRC but not in SWIFT or have newer modified date in CWRC.
    It also creates two output files swift_missing_objs.txt - containing all objects that needs to be archived,
    second file swift_objs.txt - listing all CWRC objects that are in SWIFT and have same modified date.
@@ -43,7 +49,4 @@ It is recommended that you run it in debug mode for the first time to see what i
 time to run it. All debug messages redirected to STDOUT. If you want it to appear in the log file:
 
 
-```shell
-cwrc_preserver.rb [options] | tee mylogfile.txt
-```
 
