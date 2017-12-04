@@ -80,7 +80,7 @@ module CWRCPerserver
       delay = retries.shift
       raise unless delay
       sleep delay
-      http_read_timeout = http_read_timeout + 30
+      http_read_timeout += 30
       retry
     end
     open(cwrc_file, 'wb') do |file|

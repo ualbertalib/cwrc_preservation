@@ -106,7 +106,7 @@ module CWRCPerserver
     cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
     swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
     log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
-    File.open(success_file, 'a') do  |ok_file|
+    File.open(success_file, 'a') do |ok_file|
       ok_file.write("#{cwrc_file_str} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
     end
   end
