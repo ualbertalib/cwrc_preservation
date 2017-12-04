@@ -62,7 +62,6 @@ module CWRCPerserver
     cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
 
     log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
-    start_time = Time.now
 
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false || re_process
@@ -77,6 +76,7 @@ module CWRCPerserver
                 cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
     # download object from cwrc
+    start_time = Time.now
     log.debug("DOWNLOADING: #{cwrc_file}")
     begin
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
@@ -87,6 +87,7 @@ module CWRCPerserver
     file_size = File.size(cwrc_file).to_f / 2**20
     fs_str = format('%.3f', file_size)
     log.debug("SIZE: #{fs_str} MB")
+    cwrc_time = Time.now
 
     # deposit into swift an remove file, handle swift errors
     begin
@@ -97,11 +98,16 @@ module CWRCPerserver
       FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       next
     end
+    swift_time = Time.now
 
     # cleanup - remove file and print statistics
     FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
-    dp_rate = format('%.3f', (file_size / (Time.now - start_time)))
-    log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} MB/sec")
-    File.open(success_file, 'a') { |ok_file| ok_file.write("#{cwrc_file_str} #{fs_str} MB #{dp_rate} MB/sec\n") }
+    dp_rate = format('%.3f', (file_size / (swift_time - start_time)))
+    cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
+    swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
+    log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
+    File.open(success_file, 'a') do  |ok_file|
+      ok_file.write("#{cwrc_file_str} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
+    end
   end
 end

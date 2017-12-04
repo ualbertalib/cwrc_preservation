@@ -48,5 +48,7 @@ cwrc_reconcile.rb
 It is recommended that you run it in debug mode for the first time to see what it is doing as it might take long
 time to run it. All debug messages redirected to STDOUT. If you want it to appear in the log file:
 
+- Troubleshooting
 
-
+We have implemented reuse of cookies using connection_cookie.txt file. If CWRC server is reset and will not recognize
+previously issued cookie (even though it did not expire), simply delete connection_cookie.txt

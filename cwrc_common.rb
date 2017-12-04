@@ -55,7 +55,9 @@ module CWRCPerserver
     all_obj_uri = URI.parse("https://#{ENV['CWRC_HOSTNAME']}/services/bagit_extension/#{audit_str}")
     all_obj_req = Net::HTTP::Get.new(all_obj_uri)
     all_obj_req['Cookie'] = cookie
-    all_obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i, use_ssl: true) do |http|
+    http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
+    all_obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
+                                       use_ssl: true, read_timeout: http_read_timeout) do |http|
       http.request(all_obj_req)
     end
     all_obj_response.body.slice! timestamp
