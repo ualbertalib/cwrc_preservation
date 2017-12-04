@@ -1,10 +1,10 @@
-require 'bundler/gem_tasks'
+require 'rake/testtask'
 require 'rubocop/rake_task'
-
-RSpec::Core::RakeTask.new do |r|
-  r.verbose = false
-end
 
 RuboCop::RakeTask.new
 
-task default: [:rubocop]
+Rake::TestTask.new(:test) do |t|
+  t.test_files = FileList['*_test.rb']
+end
+
+task default: [:rubocop, :test]
