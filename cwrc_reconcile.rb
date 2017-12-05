@@ -36,8 +36,7 @@ module CWRCPerserver
     swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
 
     # if object is not is swift or we have newer object in cwrc report it
-    mod_dt = swift_file.metadata['timestamp'].to_s unless swift_file.nil
-    if swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > mod_dt.to_time
+    if swift_file.nil? || cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
       print "OBJECT MISSING FROM SWIFT: #{cwrc_file_str}\n"
       File.open('swift_missing_objs.txt', 'a') { |miss_file| miss_file.write("#{cwrc_file_str}\n") }
     else
