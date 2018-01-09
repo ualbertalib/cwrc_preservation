@@ -95,6 +95,6 @@ module CWRCPerserver
                               auth_url: ENV['SWIFT_AUTH_URL'],
                               project_name: ENV['SWIFT_PROJECT_NAME'],
                               project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
-                              project: ENV['SWIFT_PROJECT'])
+                              project: ENV['SWIFT_PROJECT_NAME'])
   end
 end

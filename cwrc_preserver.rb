@@ -91,7 +91,7 @@ module CWRCPerserver
 
     # deposit into swift an remove file, handle swift errors
     begin
-      swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], timestamp: cwrc_obj['timestamp'])
+      swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], last_mod_timestamp: cwrc_obj['timestamp'])
     rescue StandardError => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
       File.open(except_file, 'a') { |err_file| err_file.write("#{cwrc_file_str}\n") }
