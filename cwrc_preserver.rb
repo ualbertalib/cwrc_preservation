@@ -54,10 +54,10 @@ module CWRCPerserver
               else
                 get_cwrc_objs(cookie, start_dt)
               end
-  log.debug("Number of objects to precess: #{cwrc_objs.length}")
+  log.debug("Number of objects to precess: #{cwrc_objs&.length}")
 
   # for each cwrc object
-  cwrc_objs.each do |cwrc_obj|
+  cwrc_objs&.each do |cwrc_obj|
     cwrc_file_str = cwrc_obj['pid'].to_s
     cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
 
@@ -72,7 +72,7 @@ module CWRCPerserver
     end
 
     # if object is not is swift or we have newer object
-    next unless force_deposit || swift_file.nil? ||
+    next unless force_deposit || swift_file.nil? || swift_file.metadata['timestamp'].nil? ||
                 cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
     # download object from cwrc
