@@ -85,7 +85,6 @@ module CWRCPerserver
   #  },
   swift_container = swift_con.swift_connection.container(swift_con.project)
 
-
   # ugly kludge for bug in ruby-openstack - no iterator or pagination
   # unable pagination using markers - assume order stays the same
   # https://github.com/ruby-openstack/ruby-openstack/issues/37
