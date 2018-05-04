@@ -41,12 +41,11 @@ require 'swift_ingest'
 require_relative 'cwrc_common'
 
 module CWRCPerserver
-
   # status IDs
-  STATUS_OK = ''
-  STATUS_E_SIZE = 's' # error: size zero or too small
-  STATUS_I_FLAG = 'x' # flagged for preservation
-  STATUS_I_DEL = 'd' # missing from the CWRC side while Swift contains a copy
+  STATUS_OK = ''.freeze
+  STATUS_E_SIZE = 's'.freeze # error: size zero or too small
+  STATUS_I_FLAG = 'x'.freeze # flagged for preservation
+  STATUS_I_DEL = 'd'.freeze # missing from the CWRC side while Swift contains a copy
 
   opt_summary_output = false
   ARGV.options do |opts|
@@ -92,19 +91,17 @@ module CWRCPerserver
   # https://github.com/ruby-openstack/ruby-openstack/issues/37
   # https://github.com/ruby-openstack/ruby-openstack/blob/master/lib/openstack/swift/container.rb#L100
 
-  swift_objs = swift_container.objects_detail()
-  while swift_objs.count < swift_container.container_metadata[:count].to_i 
-    swift_objs = swift_objs.merge(
-                   swift_container.objects_detail(marker: swift_objs.keys.last)
-                   )
+  swift_objs = swift_container.objects_detail
+  while swift_objs.count < swift_container.container_metadata[:count].to_i
+    swift_objs = swift_objs.merge(swift_container.objects_detail(marker: swift_objs.keys.last))
   end
 
   # TODO: use CSV gem
   # CSV header
   puts "cwrc_pid (#{cwrc_objs.count}),"\
-    "cwrc_mtime (#{DateTime.now}),"\
+    "cwrc_mtime (#{Time.now}),"\
     "swift_id (#{swift_container.container_metadata[:count]}),"\
-    "swift_timestamp,swift_bytes,status"
+    'swift_timestamp,swift_bytes,status'
 
   # TODO: find a better way to merge CWRC and Swift hashes into an output format
   # for each cwrc object
@@ -142,7 +139,6 @@ module CWRCPerserver
     if !opt_summary_output || (opt_summary_output && status != STATUS_OK)
       puts "#{cwrc_pid},#{cwrc_mtime},#{swift_id},#{swift_timestamp},#{swift_bytes},#{status}"
     end
-
   end
 
   # find the remaining Swift objects that don't have corresponding items in CWRC
@@ -151,5 +147,4 @@ module CWRCPerserver
     # CSV content
     puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},d"
   end
-
 end
