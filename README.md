@@ -56,7 +56,18 @@ time to run it. All debug messages redirected to STDOUT. If you want it to appea
 cwrc_preserver.rb -r
 ```
 
-- Troubleshooting
+### Reporting
+
+```shell
+Usage: cwrc_audit_report [options]
+    -s, --summary                    Summary output where status is not 'ok'
+    -h, --help                       Displays help
+```
+Builds a CSV formatted audit report comparing the CWRC content to UAL Swift content.
+    
+The report lists the CWRC object PIDs and modification date/times and links to the associated Swift object displaying the Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicate a need for preservation, or if the size of the Swift object is zero, etc)
+
+### Troubleshooting
 
 We have implemented reuse of cookies using connection_cookie.txt file. If CWRC server is reset and will not recognize
 previously issued cookie (even though it did not expire), simply delete connection_cookie.txt
