@@ -46,7 +46,6 @@ module CWRCPerserver
     end
   end
 
-  
   def self.get_cwrc_objs(cookie, timestamp)
     audit_str = if timestamp.length.positive?
                   "audit_by_date/#{timestamp}"
@@ -62,7 +61,7 @@ module CWRCPerserver
       http.request(all_obj_req)
     end
 
-    raise CWRCArchivingError unless all_obj_response.kind_of? Net::HTTPSuccess
+    raise CWRCArchivingError unless all_obj_response.is_a? Net::HTTPSuccess
 
     all_obj_response.body.slice! timestamp
     JSON.parse(all_obj_response.body)['objects']
@@ -80,25 +79,32 @@ module CWRCPerserver
     retries = [10, 30, 90, 300, 900]
     http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
     begin
-      obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
-                                     use_ssl: true, read_timeout: http_read_timeout) do |http|
+      Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
+                      use_ssl: true, read_timeout: http_read_timeout) do |http|
         response = http.request(obj_req)
-        if (response.kind_of? Net::HTTPSuccess)
+        if response.is_a? Net::HTTPSuccess
           File.open(cwrc_file, 'wb') do |file|
             file.write(response.body)
           end
-          # test HTTP header CWRC-CHECHSUM with saved file in case of transport 
+          # test HTTP header CWRC-CHECHSUM with saved file in case of transport
           # corruption
-          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"','').to_s == Digest::MD5.file(cwrc_file).to_s
-        elsif (response.kind_of? Net::HTTPServerError)
+          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '').to_s == Digest::MD5.file(cwrc_file).to_s
+        elsif response.is_a? Net::HTTPServerError
           raise Net::HTTPServerError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         else
           raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         end
       end
-    rescue Net::ReadTimeout, Net::HTTPServerError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, Net::HTTPError,
-           Errno::EHOSTUNREACH, Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError
-      # retry
+    rescue Net::ReadTimeout,
+           Net::HTTPBadResponse,
+           Net::HTTPHeaderSyntaxError,
+           Net::HTTPServerError,
+           Net::HTTPError,
+           Errno::ECONNRESET,
+           Errno::EHOSTUNREACH,
+           Errno::EINVAL,
+           EOFError
+      # retry if exception
       delay = retries.shift
       raise unless delay
       sleep delay
