@@ -87,6 +87,9 @@ module CWRCPerserver
           File.open(cwrc_file, 'wb') do |file|
             file.write(response.body)
           end
+          # test HTTP header CWRC-CHECHSUM with saved file in case of transport 
+          # corruption
+          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"','').to_s == Digest::MD5.file(cwrc_file).to_s
         elsif (response.kind_of? Net::HTTPServerError)
           raise Net::HTTPServerError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         else
