@@ -61,6 +61,9 @@ module CWRCPerserver
                                        use_ssl: true, read_timeout: http_read_timeout) do |http|
       http.request(all_obj_req)
     end
+
+    raise CWRCArchivingError unless all_obj_response.kind_of? Net::HTTPSuccess
+
     all_obj_response.body.slice! timestamp
     JSON.parse(all_obj_response.body)['objects']
   end
@@ -90,7 +93,7 @@ module CWRCPerserver
           raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         end
       end
-    rescue Net::ReadTimeout, Net::HTTPServerError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, Net::HTTPError
+    rescue Net::ReadTimeout, Net::HTTPServerError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, Net::HTTPError,
            Errno::EHOSTUNREACH, Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError
       # retry
       delay = retries.shift
