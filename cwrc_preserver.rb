@@ -74,7 +74,7 @@ module CWRCPerserver
     # if object is not is swift or we have newer object
     next unless force_deposit ||
                 swift_file.nil? ||
-                swift_file.bytes.to_f == 0 ||
+                swift_file.bytes.to_f.zero? ||
                 swift_file.metadata['timestamp'].nil? ||
                 cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
 
