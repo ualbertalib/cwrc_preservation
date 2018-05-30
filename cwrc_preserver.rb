@@ -80,8 +80,10 @@ module CWRCPerserver
     log.debug("DOWNLOADING: #{cwrc_file}")
     begin
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
-    rescue Net::ReadTimeout
-      log.error("ERROR DOWNLOADING: #{cwrc_file}")
+    rescue Net::ReadTimeout, Net::HTTPServerError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, Net::HTTPError
+           Errno::EHOSTUNREACH, Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError
+           => e
+      log.error("ERROR DOWNLOADING: #{cwrc_file} - #{e.class} #{e.message} #{e.backtrace}")
       next
     end
     file_size = File.size(cwrc_file).to_f / 2**20

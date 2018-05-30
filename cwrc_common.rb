@@ -46,6 +46,7 @@ module CWRCPerserver
     end
   end
 
+  
   def self.get_cwrc_objs(cookie, timestamp)
     audit_str = if timestamp.length.positive?
                   "audit_by_date/#{timestamp}"
@@ -64,6 +65,10 @@ module CWRCPerserver
     JSON.parse(all_obj_response.body)['objects']
   end
 
+  # Given a UUID, connect to the server and download a file
+  # retry in event the server or network connection
+  # only save a file if successful
+  # http://ruby-doc.org/stdlib-2.5.1/libdoc/net/http/rdoc/Net/HTTP.html
   def self.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     # download object from cwrc
     obj_path = "https://#{ENV['CWRC_HOSTNAME']}/islandora/object/#{cwrc_obj['pid']}/manage/bagit_extension"
@@ -74,17 +79,25 @@ module CWRCPerserver
     begin
       obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'].to_s.to_i,
                                      use_ssl: true, read_timeout: http_read_timeout) do |http|
-        http.request(obj_req)
+        response = http.request(obj_req)
+        if (response.kind_of? Net::HTTPSuccess)
+          File.open(cwrc_file, 'wb') do |file|
+            file.write(response.body)
+          end
+        elsif (response.kind_of? Net::HTTPServerError)
+          raise Net::HTTPServerError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+        else
+          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+        end
       end
-    rescue Net::ReadTimeout
+    rescue Net::ReadTimeout, Net::HTTPServerError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, Net::HTTPError
+           Errno::EHOSTUNREACH, Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError
+      # retry
       delay = retries.shift
       raise unless delay
       sleep delay
       http_read_timeout += 30
       retry
-    end
-    File.open(cwrc_file, 'wb') do |file|
-      file.write(obj_response.body)
     end
   end
 
