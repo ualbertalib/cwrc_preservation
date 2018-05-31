@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
+# Query the CWRC repository for object to preserve within a OpenStack
+# Swift preservation stack
+#
 #   Usage: <progname> [options]...
 #   options
 #    -h --help  display help
@@ -17,12 +20,29 @@ module CWRCPerserver
   start_dt = ''
   reprocess = ''
 
-  file = __FILE__
   ARGV.options do |opts|
-    opts.on('-d', '--debug', 'set log level to debug') { debug_level = true }
-    opts.on('-s', '--start=val', String) { |val| start_dt = val }
-    opts.on_tail('-h', '--help')         { exec "grep ^#[[:space:]]<'#{file}'|cut -c6-" }
-    opts.on('-r', '--reprocess=val', String) { |val| reprocess = val }
+    opts.banner = 'Usage: cwrc_preserver [options]'
+    opts.separator ''
+    opts.separator 'options:'
+
+    opts.on('-d', '--debug', 'set log level to debug') do ||
+      debug_level = true
+    end
+
+    opts.on('-r', '--reprocess=', String,
+            'path to file contain IDs, one per line, for processing') do |val|
+      reprocess = val
+    end
+
+    opts.on('-s', '--start=val', String,
+            'subset of material modified after specified ISO-8601 date/time') do |val|
+      start_dt = val
+    end
+
+    opts.on_tail('-h', '--help') do
+      puts opts
+      exit
+    end
     opts.parse!
   end
 
@@ -30,8 +50,15 @@ module CWRCPerserver
   set_env
 
   # load exception files
-  except_file = ENV['SWIFT_ARCHIVE_FAILED']
-  success_file = ENV['SWIFT_ARCHIVED_OK']
+  log_dir = ENV['CWRC_PRESERVER_LOG_DIR']
+  time_str = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+  except_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVE_FAILED'])
+  success_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVED_OK'])
+  Dir.mkdir(log_dir) unless File.exist?(log_dir)
+
+  # working directory
+  work_dir = ENV['CWRC_PRESERVER_LOG_DIR']
+  Dir.mkdir(work_dir) unless File.exist?(work_dir)
 
   # setup logger and log level
   log = Logger.new(STDOUT)
