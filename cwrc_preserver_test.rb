@@ -34,7 +34,6 @@ class VCRTest < Test::Unit::TestCase
         CWRCPerserver.set_env
         refute_empty CWRCPerserver.retrieve_cookie
       end
-      assert File.exist?('connection_cookie.txt')
     end
   end
 
