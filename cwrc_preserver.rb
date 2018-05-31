@@ -19,7 +19,7 @@ module CWRCPerserver
 
   file = __FILE__
   ARGV.options do |opts|
-    opts.on('-d', '--debug')             { debug_level = true }
+    opts.on('-d', '--debug', 'set log level to debug') { debug_level = true }
     opts.on('-s', '--start=val', String) { |val| start_dt = val }
     opts.on_tail('-h', '--help')         { exec "grep ^#[[:space:]]<'#{file}'|cut -c6-" }
     opts.on('-r', '--reprocess=val', String) { |val| reprocess = val }
@@ -35,7 +35,7 @@ module CWRCPerserver
 
   # setup logger and log level
   log = Logger.new(STDOUT)
-  log.level = Logger::DEBUG if debug_level
+  log.level = debug_level ? Logger::DEBUG : Logger::INFO
   log.debug("Retrieving all objects modified since: #{start_dt}")
 
   # get connection cookie
@@ -56,7 +56,7 @@ module CWRCPerserver
                 log.debug('Processing api response')
                 get_cwrc_objs(cookie, start_dt)
               end
-  log.debug("Number of objects to precess: #{cwrc_objs&.length}")
+  log.debug("Number of objects to process: #{cwrc_objs.nil? ? '0' : cwrc_objs&.length}")
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|

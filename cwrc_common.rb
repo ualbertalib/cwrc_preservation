@@ -11,13 +11,6 @@ module CWRCPerserver
     # Initialize a cookie jar
     jar = HTTP::CookieJar.new
 
-    cookie_file = 'connection_cookie.txt'
-    if File.exist?(cookie_file)
-      jar.load(cookie_file)
-      cookie = jar.cookies("https://#{ENV['CWRC_HOSTNAME']}")[0]
-      return cookie.cookie_value unless cookie.expired? || cookie.nil?
-    end
-
     login_request = Net::HTTP::Post.new(URI.parse("https://#{ENV['CWRC_HOSTNAME']}#{ENV['CWRC_LOGIN_PATH']}"))
     login_request.content_type = 'application/json'
     login_request.body = JSON.dump('username' => ENV['CWRC_USERNAME'],
@@ -32,8 +25,6 @@ module CWRCPerserver
     login_response.get_fields('Set-Cookie').each do |value|
       jar.parse(value, "https://#{ENV['CWRC_HOSTNAME']}")
     end
-
-    jar.save(cookie_file)
 
     HTTP::Cookie.cookie_value(jar.cookies("https://#{ENV['CWRC_HOSTNAME']}"))
   end
