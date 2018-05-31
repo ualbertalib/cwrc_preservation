@@ -4,7 +4,7 @@
 #    -h --help  display help
 #    -d --debug run in debug mode
 #    -s --start <timestamp> retrieve sub-set defined by modified timestamp
-#     -r --reprocess reprocess failed objects (from SWIFT_ARCHIVE_FAILED, see secrets.yml)
+#    -r --reprocess reprocess a commandline specified file of IDs, one per line to process
 require 'swift_ingest'
 require 'optparse'
 require 'logger'
@@ -15,14 +15,14 @@ module CWRCPerserver
   # process command line arguments
   debug_level = false
   start_dt = ''
-  re_process = false
+  reprocess = ''
 
   file = __FILE__
   ARGV.options do |opts|
     opts.on('-d', '--debug')             { debug_level = true }
     opts.on('-s', '--start=val', String) { |val| start_dt = val }
     opts.on_tail('-h', '--help')         { exec "grep ^#[[:space:]]<'#{file}'|cut -c6-" }
-    opts.on('-r', '--reprocess')         { re_process = true }
+    opts.on('-r', '--reprocess=val', String) { |val| reprocess = val }
     opts.parse!
   end
 
@@ -43,15 +43,17 @@ module CWRCPerserver
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
-  swift_depositer = connect_to_swift
-  raise CWRCArchivingError if swift_depositer.nil?
+  # swift_depositer = connect_to_swift
+  # raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
-  cwrc_objs = if re_process
+  cwrc_objs = if !reprocess.to_s.empty?
                 rp_list = []
-                File.open(ENV['CWRC_REPROCESS']).each { |line| rp_list << line } if File.exist?(ENV['CWRC_REPROCESS'])
-                Hash(rp_list.collect { |v| ['pid', v] })
+                log.debug("Processing by file: #{reprocess}")
+                File.open(reprocess).each { |line| rp_list << line } if File.exist?(reprocess)
+                rp_list.collect { |v| { 'pid' => v.strip } }
               else
+                log.debug('Processing api response')
                 get_cwrc_objs(cookie, start_dt)
               end
   log.debug("Number of objects to precess: #{cwrc_objs&.length}")
@@ -64,7 +66,7 @@ module CWRCPerserver
     log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
-    force_deposit = false || re_process
+    force_deposit = false || !reprocess.to_s.empty?
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
     rescue StandardError
