@@ -36,7 +36,7 @@ http_interactions:
       - Accept
       Set-Cookie:
       - SSESS4a2def46652b1da5ee532ee7b2c0e22f=MuZrH1t15uN_BM2w1hAb03rNnw7V4HBTKWBRKp1hO28;
-        expires=Sat, 09-Dec-2017 23:13:56 GMT; path=/; domain=.cwrc-dev-05.srv.ualberta.ca;
+        expires=Sat, 09-Dec-2055 23:13:56 GMT; path=/; domain=.cwrc-dev-05.srv.ualberta.ca;
         secure; HttpOnly
       Content-Length:
       - '1326'

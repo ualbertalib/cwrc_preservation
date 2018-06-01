@@ -25,7 +25,7 @@ module CWRCPerserver
     opts.separator ''
     opts.separator 'options:'
 
-    opts.on('-d', '--debug', 'set log level to debug') do ||
+    opts.on('-d', '--debug', 'set log level to debug') do
       debug_level = true
     end
 
