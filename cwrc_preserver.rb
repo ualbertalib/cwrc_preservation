@@ -29,7 +29,7 @@ module CWRCPerserver
       debug_level = true
     end
 
-    opts.on('-r', '--reprocess=', String,
+    opts.on('-r', '--reprocess=path', String,
             'path to file contain IDs, one per line, for processing') do |val|
       reprocess = val
     end
@@ -57,7 +57,7 @@ module CWRCPerserver
   Dir.mkdir(log_dir) unless File.exist?(log_dir)
 
   # working directory
-  work_dir = ENV['CWRC_PRESERVER_LOG_DIR']
+  work_dir = ENV['CWRC_PRESERVER_WORK_DIR']
   Dir.mkdir(work_dir) unless File.exist?(work_dir)
 
   # setup logger and log level
@@ -70,13 +70,13 @@ module CWRCPerserver
   log.debug("Using connecion cookie: #{cookie}")
 
   # connect to swift storage
-  # swift_depositer = connect_to_swift
-  # raise CWRCArchivingError if swift_depositer.nil?
+  swift_depositer = connect_to_swift
+  raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
   cwrc_objs = if !reprocess.to_s.empty?
                 rp_list = []
-                log.debug("Processing by file: #{reprocess}")
+                log.debug("Processing ID list from file: #{reprocess}")
                 File.open(reprocess).each { |line| rp_list << line } if File.exist?(reprocess)
                 rp_list.collect { |v| { 'pid' => v.strip } }
               else
@@ -89,15 +89,17 @@ module CWRCPerserver
   cwrc_objs&.each do |cwrc_obj|
     cwrc_file_str = cwrc_obj['pid'].to_s
     cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
+    cwrc_file_tmp_path = File.join(work_dir, cwrc_file)
 
-    log.debug("PROCESSING OBJECT: #{cwrc_file_str}, modified timestamp #{cwrc_obj['timestamp']}")
+    log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false || !reprocess.to_s.empty?
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
-    rescue StandardError
+    rescue StandardError => e
       force_deposit = true
+      log.debug("Force deposit in swift: #{cwrc_obj['pid']} #{e.message}")
     end
 
     # if object is not is swift or we have newer object
@@ -109,9 +111,9 @@ module CWRCPerserver
 
     # download object from cwrc
     start_time = Time.now
-    log.debug("DOWNLOADING: #{cwrc_file}")
+    log.debug("DOWNLOADING from CWRC: #{cwrc_obj['pid']}")
     begin
-      download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
+      download_cwrc_obj(cookie, cwrc_obj, cwrc_file_tmp_path)
     rescue Net::ReadTimeout,
            Net::HTTPBadResponse,
            Net::HTTPHeaderSyntaxError,
@@ -121,33 +123,38 @@ module CWRCPerserver
            Errno::EHOSTUNREACH,
            Errno::EINVAL,
            EOFError => e
-      log.error("ERROR DOWNLOADING: #{cwrc_file} - #{e.class} #{e.message} #{e.backtrace}")
+      log.error("ERROR DOWNLOADING: #{cwrc_obj['pid']} - #{e.class} #{e.message} #{e.backtrace}")
       next
     end
-    file_size = File.size(cwrc_file).to_f / 2**20
+
+    file_size = File.size(cwrc_file_tmp_path).to_f / 2**20
     fs_str = format('%.3f', file_size)
     log.debug("SIZE: #{fs_str} MB")
     cwrc_time = Time.now
 
-    # deposit into swift an remove file, handle swift errors
+    # deposit into swift and remove file, handle swift errors
     begin
-      swift_depositer.deposit_file(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'], last_mod_timestamp: cwrc_obj['timestamp'])
+      swift_depositer.deposit_file(cwrc_file_tmp_path,
+                                   ENV['CWRC_SWIFT_CONTAINER'],
+                                   last_mod_timestamp: cwrc_obj['timestamp'])
     rescue StandardError => e
       log.error("SWIFT DEPOSITING ERROR #{e.message}")
-      File.open(except_file, 'a') { |err_file| err_file.write("#{cwrc_file_str}\n") }
-      FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
+      File.open(except_file, 'a') { |err_file| err_file.write("#{cwrc_obj['pid']}\n") }
+      FileUtils.rm_rf(cwrc_file_tmp_path) if File.exist?(cwrc_file_tmp_path)
       next
     end
     swift_time = Time.now
 
-    # cleanup - remove file and print statistics
-    FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
+    # cleanup - remove file
+    FileUtils.rm_rf(cwrc_file_tmp_path) if File.exist?(cwrc_file_tmp_path)
+
+    # print statistics
     dp_rate = format('%.3f', (file_size / (swift_time - start_time)))
     cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
     swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
     log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
     File.open(success_file, 'a') do |ok_file|
-      ok_file.write("#{cwrc_file_str} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
+      ok_file.write("#{cwrc_obj['pid']} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
     end
   end
 end
