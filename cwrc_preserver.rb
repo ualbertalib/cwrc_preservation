@@ -19,11 +19,16 @@ module CWRCPerserver
   debug_level = false
   start_dt = ''
   reprocess = ''
+  config_file = './secrets.yml'
 
   ARGV.options do |opts|
     opts.banner = 'Usage: cwrc_preserver [options]'
     opts.separator ''
     opts.separator 'options:'
+
+    opts.on '-C', '--config PATH', 'Path for YAML config file' do |val|
+      config_file = val
+    end
 
     opts.on('-d', '--debug', 'set log level to debug') do
       debug_level = true
@@ -47,7 +52,7 @@ module CWRCPerserver
   end
 
   # set environment
-  set_env
+  init_env(config_file)
 
   # load exception files
   log_dir = ENV['CWRC_PRESERVER_LOG_DIR']

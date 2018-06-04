@@ -29,9 +29,8 @@ module CWRCPerserver
     HTTP::Cookie.cookie_value(jar.cookies("https://#{ENV['CWRC_HOSTNAME']}"))
   end
 
-  def self.set_env
+  def self.init_env(env_file = './secrets.yml')
     # read secrets.yml and set up environment vars
-    env_file = './secrets.yml'
     YAML.safe_load(File.open(env_file)).each do |key, value|
       ENV[key.to_s] = value
     end
