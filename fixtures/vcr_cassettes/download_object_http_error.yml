@@ -1,0 +1,61 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://cwrc-dev-05.srv.ualberta.ca/islandora/object/islandora:eb608bc8-059b-4cfc-bc13-358823009373/manage/bagit_extension
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Cookie:
+      - SSESS4a2def46652b1da5ee532ee7b2c0e22f=MuZrH1t15uN_BM2w1hAb03rNnw7V4HBTKWBRKp1hO28
+  response:
+    status:
+      code: 400
+      message: OK
+    headers:
+      Date:
+      - Fri, 17 Nov 2017 18:48:45 GMT
+      Server:
+      - Apache/2.2.15 (CentOS)
+      X-Powered-By:
+      - PHP/5.4.40
+      Expires:
+      - Sun, 19 Nov 1978 05:00:00 GMT
+      Cache-Control:
+      - no-cache, must-revalidate, post-check=0, pre-check=0
+      X-Content-Type-Options:
+      - nosniff
+      Content-Disposition:
+      - attachment; filename="Bag-islandora_eb608bc8_059b_4cfc_bc13_358823009373.zip"
+      Content-Transfer-Encoding:
+      - binary
+      Etag:
+      - '"5fd1b2cdcb437180f97f59cc07d18726"'
+      Cwrc-Modified-Date:
+      - '"2015-02-13T18:28:24.492Z"'
+      Cwrc-Checksum:
+      - '"5fd1b2cdcb437180f97f59cc07d18726"'
+      Cwrc-Pid:
+      - '"islandora:eb608bc8-059b-4cfc-bc13-358823009373"'
+      Accept-Ranges:
+      - bytes
+      Content-Length:
+      - '56047'
+      Content-Language:
+      - en
+      Connection:
+      - close
+      Content-Type:
+      - application/zip
+    body:
+      encoding: ASCII-8BIT
+    http_version: 
+  recorded_at: Fri, 17 Nov 2017 18:48:47 GMT
+recorded_with: VCR 3.0.3
