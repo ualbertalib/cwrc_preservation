@@ -27,16 +27,18 @@ cwrc_preserver.rb [options]
  -d --debug to run in debug mode
  -s <timestamp> --start=<timestamp>  to retieve objects that have been modified since <timestamp>
  -h --help display usage
- -r --reprocess re-process cwrc objects specified in re-proces file (specified secret.yml)
+ -r --reprocess <file> path to file containing IDs, one per line, for processing 
 
 cwrc_preserver.rb [options] | tee mylogfile.txt
 ```
-   cwrc_preserver.rb will create two output files (in addition to displaying messages to STDOUT), these files set in
-   secret.yml file. First file swift_archived_objs.txt that lists all CWRC successfully archived object,
-   object size and archiving rate. Second file swift_failed_objs.txt - lists all CWRC objects that are
-   failed to archive in SWIFT, usually they need to be re-processed again (hence -r parameter)
+   cwrc_preserver.rb will create two output files (in addition to displaying messages to STDOUT if debug enabled), these files set in
+   secret.yml file. swift_archived_objs.txt lists the IDs, size and archive rate of all CWRC successfully archived objects,
+   Second file, swift_failed_objs.txt, lists all CWRC objects that 
+   failed to archive in SWIFT - this will need review and are candidates for reprocessing (hence -r parameter)
 
- - to reconcile archived objects between swift and cwrc run cwrc_reconcile.rb.
+ - to view object in CWRC but not in Swift (or outdated within Swift), execute
+   - cwrc_reconcile.rb
+   - cwrc_audit_report.rb - also find items in Swift but not CWRC and adds details to the report to help audit. 
 
 ```shell
 cwrc_reconcile.rb
@@ -46,14 +48,15 @@ cwrc_reconcile.rb
    second file swift_objs.txt - listing all CWRC objects that are in SWIFT and have same modified date.
 
 It is recommended that you run it in debug mode for the first time to see what it is doing as it might take long
-time to run it. All debug messages redirected to STDOUT. If you want it to appear in the log file:
+time to run it. All debug messages redirect to STDOUT by default.
 
 ### Reprocessing files
-   if -r parameter specified and CWRC_REPROCESS environment variable is set (to point to the file name containing list
-   of CWRC objects that need to be re-processed) cwrc_preserver will reprocess specified files (will download them from
-   CWRC site and archive into SWIFT even if that object is already in the SWIFT repository)
+   if -r parameter specified and points to a file containing a list
+   of CWRC objects that need to be re-processed, cwrc_preserver will reprocess the specified files (will download them from
+   CWRC repo and archive into SWIFT even if that object is already in the SWIFT repository)
+
 ```shell
-cwrc_preserver.rb -r
+cwrc_preserver.rb -r file_name
 ```
 
 ### Reporting
@@ -65,9 +68,7 @@ Usage: cwrc_audit_report [options]
 ```
 Builds a CSV formatted audit report comparing the CWRC content to UAL Swift content.
     
-The report lists the CWRC object PIDs and modification date/times and links to the associated Swift object displaying the Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicate a need for preservation, or if the size of the Swift object is zero, etc)
+The report lists the CWRC object PIDs with modification date/times and links to the associated Swift object displaying the Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicates a need for preservation, or if the size of the Swift object is zero, etc)
 
 ### Troubleshooting
 
-We have implemented reuse of cookies using connection_cookie.txt file. If CWRC server is reset and will not recognize
-previously issued cookie (even though it did not expire), simply delete connection_cookie.txt
