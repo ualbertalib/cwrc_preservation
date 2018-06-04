@@ -68,7 +68,7 @@ module CWRCPerserver
   # setup logger and log level
   log = Logger.new(STDOUT)
   log.level = debug_level ? Logger::DEBUG : Logger::INFO
-  log.debug("Retrieving all objects modified since: #{start_dt}")
+  log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil?
 
   # get connection cookie
   cookie = retrieve_cookie
