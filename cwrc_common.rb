@@ -77,6 +77,8 @@ module CWRCPerserver
           File.open(cwrc_file, 'wb') do |file|
             file.write(response.body)
           end
+          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '').to_s
           # test HTTP header CWRC-CHECHSUM with saved file in case of transport
           # corruption
           raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '').to_s == Digest::MD5.file(cwrc_file).to_s
