@@ -95,23 +95,21 @@ module CWRCPerserver
   # TODO: use CSV gem
   # CSV header
   puts "cwrc_pid (#{cwrc_objs.count}),"\
-    "cwrc_mtime (#{Time.now}),"\
+    "cwrc_mtime (#{Time.now.iso8601}),"\
     "swift_id (#{swift_container.container_metadata[:count]}),"\
     'swift_timestamp,swift_bytes,status'
 
   # TODO: find a better way to merge CWRC and Swift hashes into an output format
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_pid = cwrc_obj['pid'].to_s
-    cwrc_mtime = cwrc_obj['timestamp'].to_s
-    swift_id = cwrc_pid.dup
+    cwrc_pid = cwrc_obj['pid']
+    cwrc_mtime = cwrc_obj['timestamp']
     # account for the CWRC PID ':' replaced with "_" in the Swift ID
-    swift_id.sub! ':', '_'
+    swift_id = cwrc_pid.sub! ':', '_'
 
     if swift_objs.key?(swift_id)
-      swift_id = swift_id
-      swift_timestamp = swift_objs[swift_id][:last_modified].dup
-      swift_bytes = swift_objs[swift_id][:bytes].dup
+      swift_timestamp = swift_objs[swift_id][:last_modified]
+      swift_bytes = swift_objs[swift_id][:bytes]
       # note: CWRC uses zulu while Swift is local timezone (assumption)
       # If timestamps don't match then report Swift object older than CWRC
       status = if Time.parse(cwrc_mtime) > Time.parse(swift_timestamp)
@@ -139,6 +137,6 @@ module CWRCPerserver
   # find the remaining Swift objects that don't have corresponding items in CWRC
   swift_objs&.each do |key, swift_obj|
     # CSV content
-    puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},d"
+    puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},#{STATUS_I_DEL}"
   end
 end
