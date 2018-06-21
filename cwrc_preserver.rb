@@ -79,11 +79,11 @@ module CWRCPerserver
   raise CWRCArchivingError if swift_depositer.nil?
 
   # get list of all objects from cwrc
-  cwrc_objs = if !reprocess.to_s.empty?
+  # returns an array of objects (e.g., [{"pid"=>"1"}, {"pid"=>"2"}])
+  cwrc_objs = if !reprocess.empty?
                 rp_list = []
                 log.debug("Processing ID list from file: #{reprocess}")
-                File.open(reprocess).each { |line| rp_list << line } if File.exist?(reprocess)
-                rp_list.collect { |v| { 'pid' => v.strip } }
+                File.open(reprocess).each { |line| rp_list << { 'pid' => line.strip } } if File.exist?(reprocess)
               else
                 log.debug('Processing api response')
                 get_cwrc_objs(cookie, start_dt)
@@ -92,8 +92,7 @@ module CWRCPerserver
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_file_str = cwrc_obj['pid'].to_s
-    cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
+    cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
     cwrc_file_tmp_path = File.join(work_dir, cwrc_file)
 
     log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
@@ -107,7 +106,7 @@ module CWRCPerserver
       log.debug("Force deposit in swift: #{cwrc_obj['pid']} #{e.message}")
     end
 
-    # if object is not is swift or we have newer object
+    # if object does not exist within Swift, or is outdated, or has a zero size, or has been marked for a forced update
     next unless force_deposit ||
                 swift_file.nil? ||
                 swift_file.bytes.to_f.zero? ||
@@ -137,7 +136,7 @@ module CWRCPerserver
     log.debug("SIZE: #{fs_str} MB")
     cwrc_time = Time.now
 
-    # deposit into swift and remove file, handle swift errors
+    # deposit into swift and remove downloaded file, handle swift errors
     begin
       swift_depositer.deposit_file(cwrc_file_tmp_path,
                                    ENV['CWRC_SWIFT_CONTAINER'],

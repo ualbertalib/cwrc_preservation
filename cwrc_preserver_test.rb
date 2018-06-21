@@ -69,7 +69,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('cookie') do
       VCR.use_cassette('download_object') do
         cwrc_obj = { 'pid' => 'islandora:eb608bc8-059b-4cfc-bc13-358823009373' }
-        cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
+        cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
         assert_nothing_raised do
           CWRCPerserver.init_env
           cookie = CWRCPerserver.retrieve_cookie
@@ -86,7 +86,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('cookie') do
       VCR.use_cassette('download_object_http_error') do
         cwrc_obj = { 'pid' => 'islandora:eb608bc8-059b-4cfc-bc13-358823009373' }
-        cwrc_file = "#{cwrc_obj['pid'].to_s.tr(':', '_')}.zip"
+        cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
         assert_raise do
           CWRCPerserver.init_env
           cookie = CWRCPerserver.retrieve_cookie
