@@ -56,7 +56,36 @@ time to run it. All debug messages redirected to STDOUT. If you want it to appea
 cwrc_preserver.rb -r
 ```
 
-- Troubleshooting
+### Reporting / auditing 
+
+```shell
+Usage: cwrc_audit_report [options]
+    -s, --summary                    Summary output where status is not 'ok'
+    -h, --help                       Displays help
+```
+
+Builds a CSV formatted audit report comparing content within the CWRC repository relative to UAL's OpenStack Swift preserved content.
+
+The report pulls input from two disparate sources: CWRC repository and UAL OpenStack Swift preservation service. The report links the content based on object id and outputs the linked information in csv rows that included the fields: the CWRC object PIDs and modification date/times, UAL Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicates a need for preservation, or if the size of the Swift object is zero, etc)    
+
+The output format is CSV with the following header columns:
+```
+     CWRC PID,
+     CWRC modification,
+     Swift ID,
+     Swift modification time,
+     Swift size,
+     Status
+
+     where:
+       status =
+          if 'x' then needs preservation
+           else if 'd' then not present within CWRC
+           else if 'x' then Swift object is of zero size
+           else '' then ok
+```
+
+### Troubleshooting
 
 We have implemented reuse of cookies using connection_cookie.txt file. If CWRC server is reset and will not recognize
 previously issued cookie (even though it did not expire), simply delete connection_cookie.txt

@@ -83,7 +83,7 @@ module CWRCPerserver
       http_read_timeout += 30
       retry
     end
-    open(cwrc_file, 'wb') do |file|
+    File.open(cwrc_file, 'wb') do |file|
       file.write(obj_response.body)
     end
   end
