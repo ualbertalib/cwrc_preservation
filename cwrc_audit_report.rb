@@ -105,7 +105,7 @@ module CWRCPerserver
     cwrc_pid = cwrc_obj['pid']
     cwrc_mtime = cwrc_obj['timestamp']
     # account for the CWRC PID ':' replaced with "_" in the Swift ID
-    swift_id = cwrc_pid.sub! ':', '_'
+    swift_id = cwrc_pid.sub ':', '_'
 
     if swift_objs.key?(swift_id)
       swift_timestamp = swift_objs[swift_id][:last_modified]
