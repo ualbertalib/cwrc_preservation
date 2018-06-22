@@ -1,16 +1,19 @@
 #!/usr/bin/env ruby
 
-# Builds a CSV formatted audit report comparing the CWRC content to UAL Swift
-# content.
+# Builds a CSV formatted audit report comparing content within the
+# CWRC repository relative to UAL's OpenStack Swift preserved content.
 #
-# The report lists the CWRC object PIDs and modification date/times
-# and links to the associated Swift object displaying the Swift ID,
-# modification time, and size along with a column indicating
-# the preservation status (i.e., indicating if modification time
-# comparison between Swift and CWRC indicate a need for preservation,
-# or if the size of the Swift object is zero, etc
+# The report pulls input from two disparate sources: CWRC repository and
+# UAL OpenStack Swift preservation service. The report links the content based
+# on object id and outputs the linked information in csv rows that included the
+# fields: the CWRC object PIDs and modification date/times, UAL Swift ID,
+# modification time, and size along with a column indicating the preservation
+# status (i.e., indicating if modification time comparison between Swift and
+# CWRC indicates a need for preservation, or if the size of the Swift object
+# is zero, etc)
+
 #
-# The output format is CSV with the following header columes:
+# The output format is CSV with the following header columns:
 #     CWRC PID,
 #     CWRC modification,
 #     Swift ID,
@@ -19,9 +22,9 @@
 #     Status
 #
 #     where:
-#       status:
+#       status =
 #          if 'x' then needs preservation
-#           else if 'd' then not present within cwrc
+#           else if 'd' then not present within CWRC
 #           else if 'x' then Swift object is of zero size
 #           else '' then ok
 #
@@ -30,8 +33,6 @@
 #     -h --help
 #     -s --summary summary output where status in not 'ok'
 #
-# The following is a kludgy, quick and dirty report written by a
-# non-Ruby programmer - 2018-05-03
 
 require 'logger'
 require 'optparse'
@@ -62,12 +63,11 @@ module CWRCPerserver
   # initialize environment
   set_env
 
-  # authenicate to CWRC repository
+  # authenticate to CWRC repository
   cookie = retrieve_cookie
 
   # query the CWRC repository
-  # {"pid"=>"cwrc:c1583789-0dad-41d3-8a42-94d7a8e6d451", "timestamp"=>"2018-05-02T17:07:29.028Z"}
-  # cwrc_objs = {}
+  # response: {"pid"=>"cwrc:c1583789-0dad-41d3-8a42-94d7a8e6d451", "timestamp"=>"2018-05-02T17:07:29.028Z"}
   cwrc_objs = get_cwrc_objs(cookie, '')
 
   # connect to swift storage
@@ -77,7 +77,7 @@ module CWRCPerserver
   # query Swift storage for a list of objects
   # https://github.com/ruby-openstack/ruby-openstack/wiki/Object-Storage
   # https://github.com/ruby-openstack/ruby-openstack/wiki/Object-Storage
-  # "cwrc_0c168793-b1ff-453f-a1f6-e1d75f7350be"=>{
+  # response: "cwrc_0c168793-b1ff-453f-a1f6-e1d75f7350be"=>{
   #    :bytes=>"5939",
   #    :content_type=>"application/x-tar",
   #    :last_modified=>"2018-02-05T06:45:23.422720",
@@ -85,11 +85,8 @@ module CWRCPerserver
   #  },
   swift_container = swift_con.swift_connection.container(swift_con.project)
 
-  # ugly kludge for bug in ruby-openstack - no iterator or pagination
-  # unable pagination using markers - assume order stays the same
-  # https://github.com/ruby-openstack/ruby-openstack/issues/37
-  # https://github.com/ruby-openstack/ruby-openstack/blob/master/lib/openstack/swift/container.rb#L100
-
+  # Iterate via markers
+  # https://github.com/ruby-openstack/ruby-openstack/blob/d9c8aa19488062e483771a9168d24f2626fe688b/lib/openstack/swift/container.rb#L100
   swift_objs = swift_container.objects_detail
   while swift_objs.count < swift_container.container_metadata[:count].to_i
     swift_objs = swift_objs.merge(swift_container.objects_detail(marker: swift_objs.keys.last))
@@ -98,36 +95,33 @@ module CWRCPerserver
   # TODO: use CSV gem
   # CSV header
   puts "cwrc_pid (#{cwrc_objs.count}),"\
-    "cwrc_mtime (#{Time.now}),"\
+    "cwrc_mtime (#{Time.now.iso8601}),"\
     "swift_id (#{swift_container.container_metadata[:count]}),"\
     'swift_timestamp,swift_bytes,status'
 
   # TODO: find a better way to merge CWRC and Swift hashes into an output format
   # for each cwrc object
-  # p "Connections between Swift and CWRC"
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_pid = cwrc_obj['pid'].to_s
-    cwrc_mtime = cwrc_obj['timestamp'].to_s
-    swift_id = cwrc_pid.dup
+    cwrc_pid = cwrc_obj['pid']
+    cwrc_mtime = cwrc_obj['timestamp']
     # account for the CWRC PID ':' replaced with "_" in the Swift ID
-    swift_id.sub! ':', '_'
+    swift_id = cwrc_pid.sub ':', '_'
 
     if swift_objs.key?(swift_id)
-      swift_id = swift_id
-      swift_timestamp = swift_objs[swift_id][:last_modified].dup
-      swift_bytes = swift_objs[swift_id][:bytes].dup
-      # note: CWRC uses zulo while Swift is local timezone (assumption)
-      # is timestamps don't match report if Swift behind CWRC
+      swift_timestamp = swift_objs[swift_id][:last_modified]
+      swift_bytes = swift_objs[swift_id][:bytes]
+      # note: CWRC uses zulu while Swift is local timezone (assumption)
+      # If timestamps don't match then report Swift object older than CWRC
       status = if Time.parse(cwrc_mtime) > Time.parse(swift_timestamp)
                  STATUS_I_FLAG
-               elsif swift_bytes.to_i < 20
+               elsif swift_bytes.to_i < 20 # object too small
                  STATUS_E_SIZE
                else
                  STATUS_OK
                end
       swift_objs.delete(swift_id)
     else
-      # Swift missing the CWRC object, status and empty Swift columes reported
+      # Swift missing the CWRC object, status and empty Swift columns reported
       swift_id = ''
       swift_timestamp = ''
       swift_bytes = ''
@@ -141,9 +135,8 @@ module CWRCPerserver
   end
 
   # find the remaining Swift objects that don't have corresponding items in CWRC
-  # p "Remaining Swift objects; objects not found in CWRC (likely deleted by CWRC)"
   swift_objs&.each do |key, swift_obj|
     # CSV content
-    puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},d"
+    puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},#{STATUS_I_DEL}"
   end
 end
