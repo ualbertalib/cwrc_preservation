@@ -60,7 +60,7 @@ SWIFT_ARCHIVED_OK:
 
 ### Preservation: cwrc_preserver.rb
 
-![System Diagram](docs/images/docs/images/cwrc_preservation.png)
+![System Diagram](docs/images/cwrc_preservation.png)
 
 This application connect to the CWRC repository and the preservation environment, determines which CWRC objects need preservation (e.g., missing from the preservation environment or the preservation environment contains a stale copy) and deposits a copy within the preservation environment. The application uses a config file specified on the commandline to contain properties (e.g. authentication). Two files are created:
 * swift_archived_objs.txt lists the IDs, size and archive rate of all CWRC successfully archived objects,
@@ -107,7 +107,7 @@ Example #3 - process objects via a list and with a forced update (i.e., deposit 
 
 ### Reporting / Auditing: cwrc_audit_report.rb
 
-![System Diagram](docs/images/docs/images/cwrc_preservation_audit.png)
+![System Diagram](docs/images/cwrc_preservation_audit.png)
 
 ```shell
 Usage: cwrc_audit_report [options]
