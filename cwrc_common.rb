@@ -73,13 +73,15 @@ module CWRCPerserver
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
         response = http.request(obj_req)
         if response.is_a? Net::HTTPSuccess
+          # CWRC response need to have the object's modified timestamp in the header
+          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+          # save HTTP response to working directory
           File.open(cwrc_file, 'wb') do |file|
             file.write(response.body)
           end
-          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
-          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
-          # test HTTP header CWRC-CHECHSUM with saved file in case of transport
-          # corruption
+          # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
+          # to detect transport corruption
           raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
         elsif response.is_a? Net::HTTPServerError
           raise Net::HTTPServerError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
