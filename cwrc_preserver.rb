@@ -98,7 +98,7 @@ module CWRCPerserver
     log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
-    force_deposit = false || !reprocess.to_s.empty?
+    force_deposit = false || !reprocess.empty?
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
     rescue StandardError => e
