@@ -66,7 +66,7 @@ module CWRCPerserver
     opts.parse!
   end
 
-  # set environment
+  # initialize environment
   init_env(config_file)
 
   # authenticate to CWRC repository
