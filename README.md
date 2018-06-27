@@ -1,13 +1,13 @@
 # CWRC Preservation
-Contains Ruby application, running behind a firewall to preserver content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into a OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects.
-
+The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
+ 
 The two main applications are:
 * [cwrc_preserver.rb](#cwrc_preserver.rb) - on-demand preservation 
 * [cwrc_audit_report.rb](#cwrc_audit_report.rb) - audit report 
 
 ## Workflow
 - cwrc_preserver.rb executes at a regular interval
-  - sends request to CWRC repository with authentication parameters to produce a manfest list of objects residing with the CWRC repository
+  - sends request to the CWRC repository with authentication parameters that produces a manfest list of objects residing with the CWRC repository as a response
   - for each CWRC repository object, inspect the preserved object 
     - if the preservered copy does not exist or is outdated (comparing CWRC manifest timestamp to the timestamp on the preserved copy), request a new AIP (Bag) from the CWRC repository and deposit within the preservation environment
 - generate an audit report via cwrc_audit_report.rb 
@@ -19,6 +19,8 @@ The two main applications are:
 ## requirements
 
 * Ruby 2.3+
+
+* CWRC API endpoint: https://github.com/cwrc/islandora_bagit_extension
 
 * Configuration file - use [secrets_example.yml](secrets_example.yml) as a starting point and the `-C --config PATH` to specify the config file to utilize. 
 ```
@@ -60,14 +62,14 @@ SWIFT_ARCHIVED_OK:
 
 ### Preservation: cwrc_preserver.rb
 
-![System Diagram](docs/images/docs/images/cwrc_preservation.png)
+![Preservation System Diagram (PNG 50px/cm)](docs/images/docs/images/cwrc_preservation.png)
 
-This application connect to the CWRC repository and the preservation environment, determines which CWRC objects need preservation (e.g., missing from the preservation environment or the preservation environment contains a stale copy) and deposits a copy within the preservation environment. The application uses a config file specified on the commandline to contain properties (e.g. authentication). Two files are created:
-* swift_archived_objs.txt lists the IDs, size and archive rate of all CWRC successfully archived objects,
-* swift_failed_objs.txt, lists all CWRC objects that failed to archive in SWIFT - this will need review and are candidates for reprocessing (hence -r parameter)
+This application connects to the CWRC repository and the preservation environment, determines which CWRC objects need preservation (e.g., missing from the preservation environment or the preservation environment contains a stale copy) and deposits a copy within the preservation environment. Optionally, the command-line allows defining a list of object ids to trigger a forced preservation event for each specified object. The application uses a config file specified on the commandline to contain properties (e.g. authentication). Two files are created:
+* swift_archived_objs.txt: lists the IDs, size and archive rate of all CWRC successfully preservered objects,
+* swift_failed_objs.txt: lists all CWRC objects that failed preservation - this will need review and are candidates for reprocessing (hence -r parameter)
 
 Common usage:
-* query all CWRC repository items and perserve if needed (example #1)
+* query all CWRC repository items and preserve if needed (example #1)
 * query CWRC repository items modified since a given date/time and perserve if needed (example #2)
 * pass defined list of items and force preservation (example #3)
 
@@ -107,7 +109,7 @@ Example #3 - process objects via a list and with a forced update (i.e., deposit 
 
 ### Reporting / Auditing: cwrc_audit_report.rb
 
-![System Diagram](docs/images/docs/images/cwrc_preservation_audit.png)
+![Audit System Diagram (PNG 50px/cm)](docs/images/docs/images/cwrc_preservation_audit.png)
 
 ```shell
 Usage: cwrc_audit_report [options]
@@ -181,6 +183,8 @@ To run rubocop by itself:
 
 ## Deployment 
 
+**ToDo: refine process**
+
 * Clone GitHub repository
 * Populate conf file using an [example](secrets_example.yml) as inspiration and store in a safe directory away from the codebase
 * Create a working directory (and record in the config file)
@@ -191,7 +195,9 @@ To run rubocop by itself:
 ### Troubleshooting
 
 ## Next steps:
+
+**ToDo: 2018-06-27 - uncertain if still valid**
+
   - Add mysql logging to swift_ingest
   - Check tracking in db and verify with info from Swift when checking for duplicates in Swift.
-
 
