@@ -4,10 +4,11 @@
 #
 #   Usage: <progname> [options]...
 #   options
-#    -h --help  display help
-#    -d --debug run in debug mode
-#    -s --start <timestamp> retrieve sub-set defined by modified timestamp
-#    -r --reprocess reprocess a commandline specified file of IDs, one per line to process
+#    -C, --config PATH                Path for YAML config file
+#    -d, --debug                      set log level to debug
+#    -r, --reprocess=path             path to file contain IDs, one per line, for processing
+#    -s, --start=val                  subset of material modified after specified ISO-8601 date/time
+#    -h, --help
 require 'swift_ingest'
 require 'optparse'
 require 'logger'
