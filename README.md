@@ -7,12 +7,12 @@ The two main applications are:
 
 ## Workflow
 - cwrc_preserver.rb executes at a regular interval
-  - sends request to the CWRC repository with authentication parameters that produces a manfest list of objects residing with the CWRC repository as a response
+  - sends request to the CWRC repository with authentication parameters that produces a manifest list of objects residing with the CWRC repository as a response
   - for each CWRC repository object, inspect the preserved object 
-    - if the preservered copy does not exist or is outdated (comparing CWRC manifest timestamp to the timestamp on the preserved copy), request a new AIP (Bag) from the CWRC repository and deposit within the preservation environment
+    - if the preserved copy does not exist or is outdated (comparing CWRC manifest timestamp to the timestamp on the preserved copy), request a new AIP (Bag) from the CWRC repository and deposit within the preservation environment
 - generate an audit report via cwrc_audit_report.rb 
-  - sends request to CWRC repository with authentication parameters to produce a manfest list of objects residing with the CWRC repository
-  - sends request to preservation environment with authentication parameters to produce a manfest list of objects residing with the preservation environment
+  - sends request to CWRC repository with authentication parameters to produce a manifest list of objects residing with the CWRC repository
+  - sends request to preservation environment with authentication parameters to produce a manifest list of objects residing with the preservation environment
   - merge lists and output as a CSV file for interpretation / review (e.g., within a spreadsheet tool)  
 
 
@@ -64,13 +64,13 @@ SWIFT_ARCHIVED_OK:
 
 ![Preservation System Diagram (PNG 50px/cm)](docs/images/cwrc_preservation.png)
 
-This application connects to the CWRC repository and the preservation environment, determines which CWRC objects need preservation (e.g., missing from the preservation environment or the preservation environment contains a stale copy) and deposits a copy within the preservation environment. Optionally, the command-line allows defining a list of object ids to trigger a forced preservation event for each specified object. The application uses a config file specified on the commandline to contain properties (e.g. authentication). Two files are created:
-* swift_archived_objs.txt: lists the IDs, size and archive rate of all CWRC successfully preservered objects,
+This application connects to the CWRC repository and the preservation environment, determines which CWRC objects need preservation (e.g., missing from the preservation environment or the preservation environment contains a stale copy) and deposits a copy within the preservation environment. Optionally, the command-line allows defining a list of object ids to trigger a forced preservation event for each specified object. The application uses a config file specified on the command-line to contain properties (e.g. authentication). Two files are created:
+* swift_archived_objs.txt: lists the IDs, size and archive rate of all CWRC successfully preserved objects,
 * swift_failed_objs.txt: lists all CWRC objects that failed preservation - this will need review and are candidates for reprocessing (hence -r parameter)
 
 Common usage:
 * query all CWRC repository items and preserve if needed (example #1)
-* query CWRC repository items modified since a given date/time and perserve if needed (example #2)
+* query CWRC repository items modified since a given date/time and preserve if needed (example #2)
 * pass defined list of items and force preservation (example #3)
 
 ```
@@ -120,7 +120,7 @@ Usage: cwrc_audit_report [options]
 
 Builds a CSV formatted audit report comparing content within the CWRC repository relative to UAL's OpenStack Swift preserved content.
 
-The report pulls input from two disparate sources: CWRC repository and UAL OpenStack Swift preservation service. The report links the content based on object id and outputs the linked information in csv rows that included the fields: the CWRC object PIDs and modification date/times, UAL Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicates a need for preservation, or if the size of the Swift object is zero, etc).    
+The report pulls input from two disparate sources: CWRC repository and UAL OpenStack Swift preservation service. The report links the content based on object id and outputs the linked information in CSV rows that included the fields: the CWRC object PIDs and modification date/times, UAL Swift ID, modification time, and size along with a column indicating the preservation status (i.e., indicating if modification time comparison between Swift and CWRC indicates a need for preservation, or if the size of the Swift object is zero, etc).    
 
 The output format is CSV with the following header columns:
 ```
