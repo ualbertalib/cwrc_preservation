@@ -85,11 +85,12 @@ module CWRCPerserver
                 rp_list = []
                 log.debug("Processing ID list from file: #{reprocess}")
                 File.open(reprocess).each { |line| rp_list << { 'pid' => line.strip } } if File.exist?(reprocess)
+                rp_list
               else
                 log.debug('Processing api response')
                 get_cwrc_objs(cookie, start_dt)
               end
-  log.debug("Number of objects to process: #{cwrc_objs.nil? ? '0' : cwrc_objs&.length}")
+  log.debug("Number of objects to process: #{cwrc_objs.nil? ? '0' : cwrc_objs&.count}")
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
