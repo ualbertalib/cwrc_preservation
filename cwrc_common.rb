@@ -74,8 +74,8 @@ module CWRCPerserver
         response = http.request(obj_req)
         if response.is_a? Net::HTTPSuccess
           # CWRC response need to have the object's modified timestamp in the header
-          raise CWRCArchivingError if response['CWRC-MODIFIED_DATE'].nil?
-          cwrc_obj['timestamp'] = response['CWRC-MODIFIED_DATE'].tr('"', '')
+          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
           # save HTTP response to working directory
           File.open(cwrc_file, 'wb') do |file|
             file.write(response.body)

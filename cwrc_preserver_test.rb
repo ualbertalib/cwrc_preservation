@@ -76,6 +76,7 @@ class VCRTest < Test::Unit::TestCase
           CWRCPerserver.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
         end
         assert !cwrc_obj['timestamp'].nil?
+        assert cwrc_obj['timestamp'] = '2015-02-13T18:24.492Z'
         assert File.exist?(cwrc_file)
         FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       end
