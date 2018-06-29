@@ -16,7 +16,7 @@ The two main applications are:
   - merge lists and output as a CSV file for interpretation / review (e.g., within a spreadsheet tool)  
 
 
-## requirements
+## Requirements
 
 * Ruby 2.3+
 
@@ -191,6 +191,11 @@ To run rubocop by itself:
 * `bundle install`
 * execute `cwrc_preserver.rb` as per examples
 * execute `cwrc_audit_report.rb` as per examples (once cwrc_preserver.rb is complete)
+
+* One possibility - ToDo - refine:
+  * cron job run once per x weeks - something like based on above examples:
+    * `bundle install; bundle exec cwrc_preserver.rb -d --config="/opt/cwrc_conf.yml" 2> /log/cwrc_preserver_$(date -Iseconds).log && bundle exec cwrc_audit_report.rb --config="/opt/cwrc_conf.yml" > /log/cwrc_audit_$(date -Iseconds).log`
+    * share the output of CWRC audit report to verify preservation event
 
 ### Troubleshooting
 
