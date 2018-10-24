@@ -4,11 +4,12 @@
 #
 #   Usage: <progname> [options]...
 #   options
-#    -C, --config PATH                Path for YAML config file
-#    -d, --debug                      set log level to debug
-#    -r, --reprocess=path             path to file contain IDs, one per line, for processing
-#    -s, --start=val                  subset of material modified after specified ISO-8601 date/time
+#    -C, --config PATH     Path for YAML config file
+#    -d, --debug           set log level to debug
+#    -r, --reprocess=path  process subset of material: path to file containing IDs, one per line
+#    -s, --start=val       process subset of material: objects modified after specified ISO-8601 YYY-MM-DD <timestamp>
 #    -h, --help
+
 require 'swift_ingest'
 require 'optparse'
 require 'logger'
@@ -36,12 +37,12 @@ module CWRCPerserver
     end
 
     opts.on('-r', '--reprocess=path', String,
-            'path to file contain IDs, one per line, for processing') do |val|
+            'process subset of material: path to file containing IDs, one per line') do |val|
       reprocess = val
     end
 
     opts.on('-s', '--start=val', String,
-            'subset of material modified after specified ISO-8601 date/time') do |val|
+            'process subset of material: objects modified after specified ISO-8601 YYY-MM-DD <timestamp>') do |val|
       start_dt = val
     end
 
@@ -68,7 +69,11 @@ module CWRCPerserver
 
   # setup logger and log level
   log = Logger.new(STDOUT)
-  log.level = debug_level ? Logger::DEBUG : Logger::INFO
+  log.level = if debug_level || ENV['DEBUG'] == 'true'
+                Logger::DEBUG
+              else
+                Logger::INFO
+              end
   log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil?
 
   # get connection cookie
@@ -113,7 +118,7 @@ module CWRCPerserver
                 swift_file.nil? ||
                 swift_file.bytes.to_f.zero? ||
                 swift_file.metadata['timestamp'].nil? ||
-                cwrc_obj['timestamp'].to_s.to_time > swift_file.metadata['timestamp'].to_s.to_time
+                cwrc_obj['timestamp'].to_time > swift_file.metadata['timestamp'].to_time
 
     # download object from cwrc
     start_time = Time.now
