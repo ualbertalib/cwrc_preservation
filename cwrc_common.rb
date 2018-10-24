@@ -102,6 +102,7 @@ module CWRCPerserver
       # retry if exception
       delay = retries.shift
       raise unless delay
+
       sleep delay
       http_read_timeout += 30
       retry
