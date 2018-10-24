@@ -30,6 +30,7 @@
 #
 # Usage: <progname> [options]...
 #   options
+#     -c --config PATH
 #     -h --help
 #     -s --summary summary output where status in not 'ok'
 #
@@ -48,8 +49,13 @@ module CWRCPerserver
   STATUS_I_FLAG = 'x'.freeze # flagged for preservation
   STATUS_I_DEL = 'd'.freeze # missing from the CWRC side while Swift contains a copy
 
+  config_file = './secrets.yml'
+
   opt_summary_output = false
   ARGV.options do |opts|
+    opts.on '-C', '--config PATH', 'Path for YAML config file' do |val|
+      config_file = val
+    end
     opts.on('-s', '--summary', "Summary output where status is not 'ok'") do
       opt_summary_output = true
     end
@@ -61,7 +67,7 @@ module CWRCPerserver
   end
 
   # initialize environment
-  set_env
+  init_env(config_file)
 
   # authenticate to CWRC repository
   cookie = retrieve_cookie
