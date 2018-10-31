@@ -11,9 +11,11 @@ end
 
 class VCRTest < Test::Unit::TestCase
 
+  TEST_CONFIG = 'secrets_example.yml'.freeze
+
   def test_init_environment
     assert_nothing_raised do
-      CWRCPerserver.init_env
+      CWRCPerserver.init_env(TEST_CONFIG)
     end
     refute_empty ENV['SWIFT_USERNAME']
     refute_empty ENV['SWIFT_PASSWORD']
@@ -31,7 +33,7 @@ class VCRTest < Test::Unit::TestCase
   def test_get_cookie
     VCR.use_cassette('cookie') do
       assert_nothing_raised do
-        CWRCPerserver.init_env
+        CWRCPerserver.init_env(TEST_CONFIG)
         refute_empty CWRCPerserver.retrieve_cookie
       end
     end
@@ -41,7 +43,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('cookie') do
       VCR.use_cassette('all_objects') do
         assert_nothing_raised do
-          CWRCPerserver.init_env
+          CWRCPerserver.init_env(TEST_CONFIG)
           cookie = CWRCPerserver.retrieve_cookie
           cwrc_objs = CWRCPerserver.get_cwrc_objs(cookie, '')
           refute_empty cwrc_objs
@@ -55,7 +57,7 @@ class VCRTest < Test::Unit::TestCase
     VCR.use_cassette('cookie') do
       VCR.use_cassette('updated_objects') do
         assert_nothing_raised do
-          CWRCPerserver.init_env
+          CWRCPerserver.init_env(TEST_CONFIG)
           cookie = CWRCPerserver.retrieve_cookie
           cwrc_objs = CWRCPerserver.get_cwrc_objs(cookie, '2017-01-01T15:29:21.374Z')
           refute_empty cwrc_objs
@@ -71,11 +73,12 @@ class VCRTest < Test::Unit::TestCase
         cwrc_obj = { 'pid' => 'islandora:eb608bc8-059b-4cfc-bc13-358823009373' }
         cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
         assert_nothing_raised do
-          CWRCPerserver.init_env
+          CWRCPerserver.init_env(TEST_CONFIG)
           cookie = CWRCPerserver.retrieve_cookie
           CWRCPerserver.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
         end
         assert !cwrc_obj['timestamp'].nil?
+        assert cwrc_obj['timestamp'] = '2015-02-13T18:24.492Z'
         assert File.exist?(cwrc_file)
         FileUtils.rm_rf(cwrc_file) if File.exist?(cwrc_file)
       end
@@ -88,7 +91,7 @@ class VCRTest < Test::Unit::TestCase
         cwrc_obj = { 'pid' => 'islandora:eb608bc8-059b-4cfc-bc13-358823009373' }
         cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
         assert_raise do
-          CWRCPerserver.init_env
+          CWRCPerserver.init_env(TEST_CONFIG)
           cookie = CWRCPerserver.retrieve_cookie
           CWRCPerserver.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
         end
