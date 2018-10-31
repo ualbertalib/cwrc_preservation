@@ -59,7 +59,7 @@ Style/ClassAndModuleChildren:
 Style/Documentation:
   Enabled: false
 
-Style/Filename:
+Naming/FileName:
   Exclude:
     - Dangerfile
     - Rakefile
