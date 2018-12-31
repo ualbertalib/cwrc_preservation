@@ -1,0 +1,48 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://cwrc-dev-05.srv.ualberta.ca/services/bagit_extension/audit_by_date/2017-01-01T15:29:21.374Z
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Cookie:
+      - SSESS4a2def46652b1da5ee532ee7b2c0e22f=MuZrH1t15uN_BM2w1hAb03rNnw7V4HBTKWBRKp1hO28
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 16 Nov 2017 20:28:56 GMT
+      Server:
+      - Apache/2.2.15 (CentOS)
+      X-Powered-By:
+      - PHP/5.4.40
+      Expires:
+      - Sun, 19 Nov 1978 05:00:00 GMT
+      Cache-Control:
+      - no-cache, must-revalidate, post-check=0, pre-check=0
+      X-Content-Type-Options:
+      - nosniff
+      Content-Language:
+      - en
+      Content-Length:
+      - '4505'
+      Connection:
+      - close
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: 2017-01-01T15:29:21.374Z{"objects":[{"pid":"islandora:26d85ab1-c617-41a1-a783-c91196fb3f08","timestamp":"2017-05-25T17:50:39.052Z"},{"pid":"cwrc:teiSchema","timestamp":"2017-09-19T17:29:53.807Z"},{"pid":"cwrc:eventsSchema","timestamp":"2017-09-19T17:29:57.004Z"},{"pid":"cwrc:biographySchema","timestamp":"2017-09-19T17:29:58.218Z"},{"pid":"cwrc:writingSchema","timestamp":"2017-09-19T17:29:59.711Z"},{"pid":"cwrc:a04b6a01-6fa4-49e0-83af-8841abce5e6f","timestamp":"2017-09-22T22:31:54.261Z"},{"pid":"cwrc:entrySchema","timestamp":"2017-09-19T17:30:01.144Z"},{"pid":"cwrc:18c33e64-518f-4a00-8795-7295f7b0bc2c","timestamp":"2017-10-31T23:58:20.083Z"},{"pid":"cwrc:bcfc0a8f-4f31-485c-9a10-449e511e63de","timestamp":"2017-11-16T18:07:23.938Z"},{"pid":"cwrc:2681e7c1-5502-43b3-bfd8-a660fba67704","timestamp":"2017-11-09T08:15:41.075Z"},{"pid":"cwrc:6654053b-505c-43e5-82a9-020036c4f5ef","timestamp":"2017-10-19T19:31:05.795Z"},{"pid":"islandora:b8022860-9b2c-46d2-b986-eaa2d04808b5","timestamp":"2017-04-01T06:26:11.728Z"},{"pid":"islandora:ca4cd146-c440-453f-b7f0-e082ffaa7201","timestamp":"2017-09-26T21:19:27.913Z"},{"pid":"islandora:93145906-543b-479d-bc4d-cbffc05ef587","timestamp":"2017-04-01T06:26:10.54Z"},{"pid":"cwrc:41fa90a4-f6a1-4d4b-92f2-b50a5143fe96","timestamp":"2017-11-03T01:34:22.171Z"},{"pid":"cwrc:74f50eeb-c6f6-4452-bdb0-a01aecdfbf6f","timestamp":"2017-09-19T19:46:05.601Z"},{"pid":"cwrc:f7d8be82-e5d7-402a-b162-daa6356298d7","timestamp":"2017-10-27T02:17:29.13Z"},{"pid":"cwrc:d4d220c1-8863-4abb-82b8-1457bc1ef933","timestamp":"2017-10-28T20:57:16.953Z"},{"pid":"cwrc:849612c7-032f-424a-b00a-4abd2e26e5fb","timestamp":"2017-10-30T18:55:15.494Z"},{"pid":"cwrc:8d235859-a651-435b-b152-f034ba1a22c7","timestamp":"2017-11-14T15:28:00.508Z"},{"pid":"cwrc:teiLiteSchema","timestamp":"2017-09-19T17:29:55.598Z"},{"pid":"cwrc:7b25e22c-e8aa-4c16-8de4-3c6ecd84f72d","timestamp":"2017-11-01T18:34:28.318Z"},{"pid":"cwrc:8a44b9cc-a695-40f3-a759-0a78d67c2c6b","timestamp":"2017-09-26T21:19:29.497Z"},{"pid":"orlando:de4ee13d-215a-4089-adf6-d3a7b327f609","timestamp":"2017-02-07T01:51:31.899Z"},{"pid":"orlando:1f6f7f6e-a6bf-4bb4-8025-a04dbb92d314","timestamp":"2017-11-07T20:25:41.975Z"},{"pid":"orlando:b4859cdd-8c58-46e9-bf2a-28bf8090fcbc","timestamp":"2017-11-07T23:49:16.218Z"},{"pid":"orlando:bca4a8fa-fd3e-475c-a531-2319dc25c087","timestamp":"2017-01-05T17:55:02.76Z"},{"pid":"orlando:0b59baee-7b69-4b13-90af-9f7777736028","timestamp":"2017-03-28T17:10:14.147Z"},{"pid":"orlando:9e177e90-d95d-43f9-8adf-8196608a24d2","timestamp":"2017-03-28T17:10:19.541Z"},{"pid":"orlando:b563cb1a-487d-4283-adc4-c09bcaa382ee","timestamp":"2017-03-28T17:11:07.377Z"},{"pid":"orlando:f7ac0362-371c-4ec6-a540-46965c01fa85","timestamp":"2017-03-28T17:11:14.626Z"},{"pid":"orlando:23b091a4-0b0b-49d9-ab98-0f1d21bbfea6","timestamp":"2017-03-30T16:14:43.276Z"},{"pid":"orlando:28dd02c1-811c-43e2-9de6-81c3606e8860","timestamp":"2017-03-30T16:14:48.618Z"},{"pid":"orlando:a04be572-7737-472b-82ef-5353584bf981","timestamp":"2017-03-30T16:14:53.514Z"},{"pid":"orlando:7b07beb7-65b3-42f0-8c88-14367cb412f9","timestamp":"2017-03-30T16:14:58.614Z"},{"pid":"orlando:f88463d0-6fa5-4b40-a69e-c5c5a713f08d","timestamp":"2017-03-30T16:15:02.956Z"},{"pid":"orlando:006b4bd2-0a66-4abb-bdf2-600bc872e0ff","timestamp":"2017-03-30T16:15:07.69Z"},{"pid":"orlando:6bd5e9ab-d2e4-40d0-adcc-b76acbf755dd","timestamp":"2017-03-30T16:15:11.869Z"},{"pid":"orlando:2fede7e5-da54-4a21-b0cc-a4f11e0816c5","timestamp":"2017-03-30T16:15:17.151Z"},{"pid":"cwrc:98c02ce7-7a02-4029-b0cb-39931d5ca80b","timestamp":"2017-08-24T21:41:37.74Z"},{"pid":"cwrc:fc14ba90-5f22-4a59-8c59-487a2d2c5fa7","timestamp":"2017-09-19T15:34:06.506Z"},{"pid":"cwrc:0c836d18-16fb-45e1-8786-d480a41ac4c3","timestamp":"2017-09-19T17:25:35.132Z"},{"pid":"cwrc:29d78b7b-2f6d-4cf6-bf65-1149f335858e","timestamp":"2017-09-19T17:38:04.348Z"},{"pid":"cwrc:cfe3841f-5ae3-472c-9301-538831b42a0f","timestamp":"2017-10-31T21:47:22.214Z"},{"pid":"cwrc:b51e12d3-111c-4a69-905c-5d428d0bba30","timestamp":"2017-11-01T15:43:07.107Z"},{"pid":"cwrc:b9c5f0ad-8376-4e8c-97ce-22a173a77229","timestamp":"2017-11-01T16:03:24.042Z"},{"pid":"cwrc:95a43128-3e42-4908-90b1-704d8edb626a","timestamp":"2017-11-01T16:07:27.145Z"},{"pid":"cwrc:fd80785e-139a-4546-9c9d-27611ecc9216","timestamp":"2017-11-01T16:09:36.4Z"},{"pid":"cwrc:b93a8a9c-8dbc-4cd2-94e3-ae9e6d422de8","timestamp":"2017-11-01T16:13:51.537Z"},{"pid":"cwrc:aa6d5d89-18c0-4a77-9e30-312038645287","timestamp":"2017-11-15T01:33:07.034Z"}]}
+    http_version: 
+  recorded_at: Thu, 16 Nov 2017 20:28:59 GMT
+recorded_with: VCR 3.0.3

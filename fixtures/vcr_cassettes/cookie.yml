@@ -1,0 +1,54 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://cwrc-dev-05.srv.ualberta.ca/rest/user/login
+    body:
+      encoding: UTF-8
+      string: '{"username":"myuser","password":"secret"}'
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Thu, 16 Nov 2017 19:40:36 GMT
+      Server:
+      - Apache/2.2.15 (CentOS)
+      X-Powered-By:
+      - PHP/5.4.40
+      Expires:
+      - Sun, 19 Nov 1978 05:00:00 GMT
+      Cache-Control:
+      - no-cache, must-revalidate, post-check=0, pre-check=0
+      X-Content-Type-Options:
+      - nosniff
+      Vary:
+      - Accept
+      Set-Cookie:
+      - SSESS4a2def46652b1da5ee532ee7b2c0e22f=MuZrH1t15uN_BM2w1hAb03rNnw7V4HBTKWBRKp1hO28;
+        expires=Sat, 09-Dec-2055 23:13:56 GMT; path=/; domain=.cwrc-dev-05.srv.ualberta.ca;
+        secure; HttpOnly
+      Content-Length:
+      - '1326'
+      Connection:
+      - close
+      Content-Type:
+      - text/xml
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="utf-8"?>
+        <result><sessid>MuZrH1t15uN_BM2w1hAb03rNnw7V4HBTKWBRKp1hO28</sessid><session_name>SSESS4a2def46652b1da5ee532ee7b2c0e22f</session_name><token>-B-I9yFRnNozae4vEh27-q9Z6th9h823opHKCweDKPU</token><user><uid>1211</uid><name>ualbertalib</name><mail>dittest@ualberta.ca</mail><theme></theme><signature></signature><signature_format>filtered_html</signature_format><created>1509392028</created><access>1510251793</access><login>1510861236</login><status>1</status><timezone>America/Denver</timezone><language></language><picture/><init>jeffery9876@ualberta.ca</init><data></data><roles is_array="true"><item>authenticated user</item><item>administrator</item></roles><field_full_name><und is_array="true"><item><value>Digital Initiatives, University of Alberta Libraries</value><format/><safe_value>Digital Initiatives, University of Alberta Libraries</safe_value></item></und></field_full_name><rdf_mapping><rdftype is_array="true"><item>sioc:UserAccount</item></rdftype><name><predicates is_array="true"><item>foaf:name</item></predicates></name><homepage><predicates is_array="true"><item>foaf:page</item></predicates><type>rel</type></homepage></rdf_mapping><realname>Digital Initiatives, University of Alberta Libraries</realname><privatemsg_disabled></privatemsg_disabled></user></result>
+    http_version:
+  recorded_at: Thu, 16 Nov 2017 19:40:36 GMT
+recorded_with: VCR 3.0.3
