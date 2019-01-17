@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'bundler', '~> 1.14'
+gem 'bundler', '~> 2.0'
 gem 'http-cookie'
 gem 'json'
 gem 'logger'
