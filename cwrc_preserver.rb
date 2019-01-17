@@ -108,6 +108,7 @@ module CWRCPerserver
     force_deposit = false || !reprocess.empty?
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
+      log.debug("SWIFT LOOKUP: #{swift_file.nil? ? 'not found' : swift_file.metadata['last-mod-timestamp']}")
     rescue StandardError => e
       force_deposit = true
       log.debug("Force deposit in swift: #{cwrc_obj['pid']} #{e.message}")
@@ -117,8 +118,8 @@ module CWRCPerserver
     next unless force_deposit ||
                 swift_file.nil? ||
                 swift_file.bytes.to_f.zero? ||
-                swift_file.metadata['timestamp'].nil? ||
-                cwrc_obj['timestamp'].to_time > swift_file.metadata['timestamp'].to_time
+                swift_file.metadata['last-mod-timestamp'].nil? ||
+                cwrc_obj['timestamp'].to_time > swift_file.metadata['last-mod-timestamp'].to_time
 
     # download object from cwrc
     start_time = Time.now
