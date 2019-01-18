@@ -90,7 +90,8 @@ module CWRCPerserver
           raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         end
       end
-    rescue Net::ReadTimeout,
+    rescue CWRCArchivingError,
+           Net::ReadTimeout,
            Net::HTTPBadResponse,
            Net::HTTPHeaderSyntaxError,
            Net::HTTPServerError,
