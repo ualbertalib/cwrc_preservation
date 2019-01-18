@@ -6,7 +6,7 @@ require 'swift_ingest'
 require 'optparse'
 require_relative 'cwrc_common'
 
-module CWRCPerserver
+module CWRCPreserver
   # process command line arguments -h or --help
   file = __FILE__
   ARGV.options do |opts|

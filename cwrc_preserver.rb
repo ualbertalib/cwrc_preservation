@@ -16,7 +16,7 @@ require 'logger'
 require 'time'
 require_relative 'cwrc_common'
 
-module CWRCPerserver
+module CWRCPreserver
   # process command line arguments
   debug_level = false
   start_dt = ''
