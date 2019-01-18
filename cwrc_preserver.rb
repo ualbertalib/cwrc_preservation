@@ -99,7 +99,7 @@ module CWRCPerserver
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_file = "#{cwrc_obj['pid'].zip"
+    cwrc_file = "#{cwrc_obj['pid']}.zip"
     cwrc_file_tmp_path = File.join(work_dir, cwrc_file)
 
     log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
