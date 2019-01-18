@@ -85,7 +85,7 @@ module CWRCPerserver
           # to detect transport corruption
           raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
         elsif response.is_a? Net::HTTPServerError
-          raise Net::HTTPServerError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         else
           raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         end
