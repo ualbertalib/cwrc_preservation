@@ -126,7 +126,8 @@ module CWRCPerserver
     log.debug("DOWNLOADING from CWRC: #{cwrc_obj['pid']}")
     begin
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file_tmp_path)
-    rescue Net::ReadTimeout,
+    rescue CWRCArchivingError,
+           Net::ReadTimeout,
            Net::HTTPBadResponse,
            Net::HTTPHeaderSyntaxError,
            Net::HTTPServerError,
@@ -136,6 +137,7 @@ module CWRCPerserver
            Errno::EINVAL,
            EOFError => e
       log.error("ERROR DOWNLOADING: #{cwrc_obj['pid']} - #{e.class} #{e.message} #{e.backtrace}")
+      File.open(except_file, 'a') { |err_file| err_file.write("#{cwrc_obj['pid']}\n") }
       next
     end
 
