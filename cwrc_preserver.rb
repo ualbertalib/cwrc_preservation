@@ -99,8 +99,7 @@ module CWRCPerserver
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_file = cwrc_obj['pid']
-    cwrc_file_tmp_path = File.join(work_dir, cwrc_file)
+    cwrc_file_tmp_path = File.join(work_dir, cwrc_obj['pid'])
 
     log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
 
@@ -163,7 +162,7 @@ module CWRCPerserver
     dp_rate = format('%.3f', (file_size / (swift_time - start_time)))
     cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
     swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
-    log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
+    log.debug("FILE DEPOSITED: #{cwrc_obj['pid']}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
     File.open(success_file, 'a') do |ok_file|
       ok_file.write("#{cwrc_obj['pid']} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
     end
