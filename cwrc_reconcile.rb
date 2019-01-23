@@ -40,7 +40,7 @@ module CWRCPreserver
       print "OBJECT MISSING FROM SWIFT: #{cwrc_file_str}\n"
       File.open('swift_missing_objs.txt', 'a') { |miss_file| miss_file.write("#{cwrc_file_str}\n") }
     else
-      mod_dt = swift_file.metadata['timestamp'].to_s
+      mod_dt = swift_file.metadata['last-mod-timestamp'].to_s
       File.open('swift_objs.txt', 'a') { |ok_file| ok_file.write("#{cwrc_file_str} #{mod_dt}\n") }
     end
   end
