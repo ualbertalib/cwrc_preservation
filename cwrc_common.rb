@@ -4,7 +4,7 @@ require 'net/http'
 require 'json'
 require 'http-cookie'
 
-module CWRCPerserver
+module CWRCPreserver
   class CWRCArchivingError < StandardError; end
 
   def self.retrieve_cookie

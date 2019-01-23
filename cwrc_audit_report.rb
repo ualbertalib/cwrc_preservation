@@ -42,7 +42,7 @@ require 'swift_ingest'
 
 require_relative 'cwrc_common'
 
-module CWRCPerserver
+module CWRCPreserver
   # status IDs
   STATUS_OK = ''.freeze
   STATUS_E_SIZE = 's'.freeze # error: size zero or too small
