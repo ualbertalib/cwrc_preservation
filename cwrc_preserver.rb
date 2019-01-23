@@ -16,7 +16,7 @@ require 'logger'
 require 'time'
 require_relative 'cwrc_common'
 
-module CWRCPerserver
+module CWRCPreserver
   # process command line arguments
   debug_level = false
   start_dt = ''
@@ -107,6 +107,7 @@ module CWRCPerserver
     force_deposit = false || !reprocess.empty?
     begin
       swift_file = swift_depositer.get_file_from_swit(cwrc_obj['pid'], ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
+      log.debug("SWIFT LOOKUP: #{swift_file.nil? ? 'not found' : swift_file.metadata['last-mod-timestamp']}")
     rescue StandardError => e
       force_deposit = true
       log.debug("Force deposit in swift: #{cwrc_obj['pid']} #{e.message}")
@@ -116,15 +117,16 @@ module CWRCPerserver
     next unless force_deposit ||
                 swift_file.nil? ||
                 swift_file.bytes.to_f.zero? ||
-                swift_file.metadata['timestamp'].nil? ||
-                cwrc_obj['timestamp'].to_time > swift_file.metadata['timestamp'].to_time
+                swift_file.metadata['last-mod-timestamp'].nil? ||
+                cwrc_obj['timestamp'].to_time > swift_file.metadata['last-mod-timestamp'].to_time
 
     # download object from cwrc
     start_time = Time.now
     log.debug("DOWNLOADING from CWRC: #{cwrc_obj['pid']}")
     begin
       download_cwrc_obj(cookie, cwrc_obj, cwrc_file_tmp_path)
-    rescue Net::ReadTimeout,
+    rescue CWRCArchivingError,
+           Net::ReadTimeout,
            Net::HTTPBadResponse,
            Net::HTTPHeaderSyntaxError,
            Net::HTTPServerError,
@@ -134,6 +136,7 @@ module CWRCPerserver
            Errno::EINVAL,
            EOFError => e
       log.error("ERROR DOWNLOADING: #{cwrc_obj['pid']} - #{e.class} #{e.message} #{e.backtrace}")
+      File.open(except_file, 'a') { |err_file| err_file.write("#{cwrc_obj['pid']}\n") }
       next
     end
 

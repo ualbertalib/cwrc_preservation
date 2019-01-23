@@ -42,7 +42,7 @@ require 'swift_ingest'
 
 require_relative 'cwrc_common'
 
-module CWRCPerserver
+module CWRCPreserver
   # status IDs
   STATUS_OK = ''.freeze
   STATUS_E_SIZE = 's'.freeze # error: size zero or too small
@@ -93,9 +93,9 @@ module CWRCPerserver
 
   # Iterate via markers
   # https://github.com/ruby-openstack/ruby-openstack/blob/d9c8aa19488062e483771a9168d24f2626fe688b/lib/openstack/swift/container.rb#L100
-  swift_objs = swift_container.objects_detail
+  swift_objs = swift_container.objects
   while swift_objs.count < swift_container.container_metadata[:count].to_i
-    swift_objs = swift_objs.merge(swift_container.objects_detail(marker: swift_objs.keys.last))
+    swift_objs = swift_objs.merge(swift_container.objects(marker: swift_objs.keys.last))
   end
 
   # TODO: use CSV gem
@@ -113,8 +113,9 @@ module CWRCPerserver
     swift_id = cwrc_pid
 
     if swift_objs.key?(swift_id)
-      swift_timestamp = swift_objs[swift_id][:last_modified]
-      swift_bytes = swift_objs[swift_id][:bytes]
+      swift_obj = swift_container.objects(swift_id)
+      swift_timestamp = swift_obj.metadata['last-mod-timestamp']
+      swift_bytes = swift_obj.bytes
       # note: CWRC uses zulu while Swift is local timezone (assumption)
       # If timestamps don't match then report Swift object older than CWRC
       status = if Time.parse(cwrc_mtime) > Time.parse(swift_timestamp)
