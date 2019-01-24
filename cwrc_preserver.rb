@@ -106,6 +106,7 @@ module CWRCPerserver
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false || !reprocess.empty?
     begin
+      # TODO: switch to swift_depositer.lookup once Gem updated
       swift_file = swift_depositer.get_file_from_swit(cwrc_obj['pid'], ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
     rescue StandardError => e
       force_deposit = true
@@ -144,6 +145,7 @@ module CWRCPerserver
 
     # deposit into swift and remove downloaded file, handle swift errors
     begin
+      # TODO: switch to swift_depositer.deposit once Gem updated
       swift_depositer.deposit_file(cwrc_file_tmp_path,
                                    ENV['CWRC_SWIFT_CONTAINER'],
                                    last_mod_timestamp: cwrc_obj['timestamp'])
