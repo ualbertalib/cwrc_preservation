@@ -110,8 +110,7 @@ module CWRCPreserver
   cwrc_objs&.each do |cwrc_obj|
     cwrc_pid = cwrc_obj['pid']
     cwrc_mtime = cwrc_obj['timestamp']
-    # account for the CWRC PID ':' replaced with "_" in the Swift ID
-    swift_id = cwrc_pid.sub ':', '_'
+    swift_id = cwrc_pid
 
     if swift_objs.key?(swift_id)
       swift_obj = swift_container.objects(swift_id)

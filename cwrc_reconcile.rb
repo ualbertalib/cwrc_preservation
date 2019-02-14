@@ -31,7 +31,7 @@ module CWRCPreserver
   # for each cwrc object
   cwrc_objs.each do |cwrc_obj|
     cwrc_file_str = cwrc_obj['pid'].to_s
-    cwrc_file = "#{cwrc_file_str.tr(':', '_')}.zip"
+    cwrc_file = cwrc_file_str
 
     swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER'])
 

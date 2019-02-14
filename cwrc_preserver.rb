@@ -99,15 +99,15 @@ module CWRCPreserver
 
   # for each cwrc object
   cwrc_objs&.each do |cwrc_obj|
-    cwrc_file = "#{cwrc_obj['pid'].tr(':', '_')}.zip"
-    cwrc_file_tmp_path = File.join(work_dir, cwrc_file)
+    cwrc_file_tmp_path = File.join(work_dir, cwrc_obj['pid'])
 
     log.debug("PROCESSING OBJECT: #{cwrc_obj['pid']}, modified timestamp #{cwrc_obj['timestamp']}")
 
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false || !reprocess.empty?
     begin
-      swift_file = swift_depositer.get_file_from_swit(cwrc_file, ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
+      # TODO: switch to swift_depositer.lookup once Gem updated
+      swift_file = swift_depositer.get_file_from_swit(cwrc_obj['pid'], ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
       log.debug("SWIFT LOOKUP: #{swift_file.nil? ? 'not found' : swift_file.metadata['last-mod-timestamp']}")
     rescue StandardError => e
       force_deposit = true
@@ -148,6 +148,7 @@ module CWRCPreserver
 
     # deposit into swift and remove downloaded file, handle swift errors
     begin
+      # TODO: switch to swift_depositer.deposit once Gem updated
       swift_depositer.deposit_file(cwrc_file_tmp_path,
                                    ENV['CWRC_SWIFT_CONTAINER'],
                                    last_mod_timestamp: cwrc_obj['timestamp'])
@@ -166,7 +167,7 @@ module CWRCPreserver
     dp_rate = format('%.3f', (file_size / (swift_time - start_time)))
     cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
     swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
-    log.debug("FILE DEPOSITED: #{cwrc_file}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
+    log.debug("FILE DEPOSITED: #{cwrc_obj['pid']}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
     File.open(success_file, 'a') do |ok_file|
       ok_file.write("#{cwrc_obj['pid']} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")
     end
