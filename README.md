@@ -139,7 +139,7 @@ The output format is CSV with the following header columns:
        status =
           if 'x' then needs preservation
            else if 'd' then not present within CWRC
-           else if 'x' then Swift object is of zero size
+           else if 's' then Swift object is of zero size
            else '' then ok
 ```
 
@@ -211,5 +211,3 @@ To run rubocop by itself:
 
 - Add mysql logging to swift_ingest
 - Check tracking in db and verify with info from Swift when checking for duplicates in Swift.
-
-
