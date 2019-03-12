@@ -25,7 +25,7 @@
 #       status =
 #          if 'x' then needs preservation
 #           else if 'd' then not present within CWRC
-#           else if 'x' then Swift object is of zero size
+#           else if 's' then Swift object is of zero size
 #           else '' then ok
 #
 # Usage: <progname> [options]...
