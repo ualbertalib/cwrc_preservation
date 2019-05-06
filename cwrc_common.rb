@@ -15,9 +15,9 @@ module CWRCPreserver
     login_request.content_type = 'application/json'
     login_request.body = JSON.dump('username' => ENV['CWRC_USERNAME'],
                                    'password' => ENV['CWRC_PASSWORD'])
-    login_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'], use_ssl: true) do |http|
-      http.request(login_request)
-    end
+    http = Net::HTTP.new(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'])
+    http.use_ssl = true
+    login_response = http.request(login_request)
 
     # Check response code
     raise CWRCArchivingError unless login_response.code == '200'
@@ -46,10 +46,10 @@ module CWRCPreserver
     all_obj_req = Net::HTTP::Get.new(all_obj_uri)
     all_obj_req['Cookie'] = cookie
     http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
-    all_obj_response = Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
-                                       use_ssl: true, read_timeout: http_read_timeout) do |http|
-      http.request(all_obj_req)
-    end
+    http = Net::HTTP.new(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'])
+    http.use_ssl = true
+    http.read_timeout = http_read_timeout
+    all_obj_response = http.request(all_obj_req)
 
     raise CWRCArchivingError unless all_obj_response.is_a? Net::HTTPSuccess
 
@@ -68,27 +68,29 @@ module CWRCPreserver
     obj_req['Cookie'] = cookie
     retries = [10, 30, 90, 300, 900]
     http_read_timeout = ENV['CWRC_READ_TIMEOUT'].to_i
-    begin
-      Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
-                      use_ssl: true, read_timeout: http_read_timeout) do |http|
-        response = http.request(obj_req)
-        if response.is_a? Net::HTTPSuccess
-          # CWRC response need to have the object's modified timestamp in the header
-          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
-          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
-          # save HTTP response to working directory
-          File.open(cwrc_file, 'wb') do |file|
-            file.write(response.body)
-          end
-          # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
-          # to detect transport corruption
-          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
-        elsif response.is_a? Net::HTTPServerError
-          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
-        else
-          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+    begin
+      http = Net::HTTP.new(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'])
+      http.use_ssl = true
+      http.read_timeout = http_read_timeout
+      response = http.request(obj_req)
+
+      if response.is_a? Net::HTTPSuccess
+        # CWRC response need to have the object's modified timestamp in the header
+        raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+
+        cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+        # save HTTP response to working directory
+        File.open(cwrc_file, 'wb') do |file|
+          file.write(response.body)
         end
+        # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
+        # to detect transport corruption
+        raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
+      elsif response.is_a? Net::HTTPServerError
+        raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+      else
+        raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
       end
     rescue CWRCArchivingError,
            Net::ReadTimeout,
