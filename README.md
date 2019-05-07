@@ -24,6 +24,10 @@ The two main applications are:
 
 - CWRC API endpoint: https://github.com/cwrc/islandora_bagit_extension
 
+- If forward proxy in use then set `http_proxy` environment variable (see FAQ for details)
+
+  - e.g., http_proxy='http://server.proxy:port' cwrc_preserver.rb -d --config=config.file
+
 - Configuration file - use [secrets_example.yml](secrets_example.yml) as a starting point and the `-C --config PATH` to specify the config file to utilize.
 
 ```
@@ -204,6 +208,11 @@ To run rubocop by itself:
     - share the output of CWRC audit report to verify preservation event
 
 ### Troubleshooting
+
+- If using a forward proxy
+  - test via `curl` with an env var `http_proxy`
+  - <https://stackoverflow.com/questions/15792999/how-to-set-a-proxy-in-rubys-net-http#comment65922586_23778707>
+  - <https://yukimotopress.github.io/http>
 
 ## Next steps:
 
