@@ -1,13 +1,16 @@
 source 'https://rubygems.org'
 
-gem 'bundler', '~> 2.0'
+gem 'bundler', '~> 1.17'
 gem 'http-cookie'
 gem 'json'
 gem 'logger'
 gem 'rake'
-gem 'rubocop', '~> 0.51'
-gem 'rubocop-rspec', '~> 1.15.1'
 gem 'swift_ingest', '~> 0.4.0'
-gem 'test-unit'
-gem 'vcr', '~> 3.0'
-gem 'webmock'
+
+group :development, :test do
+  gem 'rubocop', '~> 0.51'
+  gem 'rubocop-rspec', '~> 1.15.1'
+  gem 'test-unit'
+  gem 'vcr', '~> 3.0'
+  gem 'webmock'
+end
