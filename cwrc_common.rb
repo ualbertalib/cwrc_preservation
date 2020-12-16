@@ -61,6 +61,7 @@ module CWRCPreserver
   # retry in event the server or network connection
   # only save a file if successful
   # http://ruby-doc.org/stdlib-2.5.1/libdoc/net/http/rdoc/Net/HTTP.html
+  # ToDo: refactor to improve readability
   def self.download_cwrc_obj(cookie, cwrc_obj, cwrc_file)
     # download object from cwrc
     obj_path = "https://#{ENV['CWRC_HOSTNAME']}/islandora/object/#{cwrc_obj['pid']}/manage/bagit_extension"
@@ -71,24 +72,32 @@ module CWRCPreserver
     begin
       Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
-        response = http.request(obj_req)
-        if response.is_a? Net::HTTPSuccess
-          # CWRC response need to have the object's modified timestamp in the header
-          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
-          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
-          # save HTTP response to working directory
-          File.open(cwrc_file, 'wb') do |file|
-            file.write(response.body)
+        #response = http.request(obj_req)
+	      http.request obj_req do |response|
+          if response.is_a? Net::HTTPSuccess
+            # CWRC response need to have the object's modified timestamp in the header
+            raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+
+            cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+ 
+            File.open(cwrc_file, 'wb') do |io|
+              # save HTTP response to working directory: chunk large file
+              response.read_body do |chunk|
+                io.write chunk
+              end
+            end
+ 
+            # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
+              # to detect transport corruption
+            raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
+          elsif response.is_a? Net::HTTPServerError
+            raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+          else
+            raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
           end
-          # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
-          # to detect transport corruption
-          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
-        elsif response.is_a? Net::HTTPServerError
-          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
-        else
-          raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
         end
+
       end
     rescue CWRCArchivingError,
            Net::ReadTimeout,
