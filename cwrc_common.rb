@@ -97,7 +97,6 @@ module CWRCPreserver
             raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
           end
         end
-
       end
     rescue CWRCArchivingError,
            Net::ReadTimeout,
