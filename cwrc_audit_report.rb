@@ -43,6 +43,9 @@ require 'swift_ingest'
 require_relative 'cwrc_common'
 
 module CWRCPreserver
+  # swift
+  SWIFT_LIMIT = 10_000
+
   # status IDs
   STATUS_OK = ''.freeze
   STATUS_E_SIZE = 's'.freeze # error: size zero or too small
@@ -93,9 +96,14 @@ module CWRCPreserver
 
   # Iterate via markers
   # https://github.com/ruby-openstack/ruby-openstack/blob/d9c8aa19488062e483771a9168d24f2626fe688b/lib/openstack/swift/container.rb#L100
-  swift_objs = swift_container.objects
-  while swift_objs.count < swift_container.container_metadata[:count].to_i
-    swift_objs = swift_objs.merge(swift_container.objects(marker: swift_objs.keys.last))
+  # Gotcha: 2021-02-16 - iterating via markers while objects are also added to Swift
+  # may lead to a race condition as the container metadata count changes but the
+  # the items added while iterating by marker don't get returned by the marker iteration
+  # see previous commits for the problematic version
+  swift_count = swift_container.container_metadata[:count].to_i
+  swift_objs = swift_container.objects(limit: SWIFT_LIMIT)
+  while swift_objs.count < swift_count
+    swift_objs += swift_container.objects(limit: SWIFT_LIMIT, marker: swift_objs.last)
   end
 
   # TODO: use CSV gem
@@ -112,8 +120,8 @@ module CWRCPreserver
     cwrc_mtime = cwrc_obj['timestamp']
     swift_id = cwrc_pid
 
-    if swift_objs.key?(swift_id)
-      swift_obj = swift_container.objects(swift_id)
+    if swift_objs.include?(swift_id)
+      swift_obj = swift_container.object(swift_id)
       swift_timestamp = swift_obj.metadata['last-mod-timestamp']
       swift_bytes = swift_obj.bytes
       # note: CWRC uses zulu while Swift is local timezone (assumption)
