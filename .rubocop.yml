@@ -21,6 +21,10 @@ Layout/IndentationConsistency:
   Enabled: true
   EnforcedStyle: normal
 
+Layout/LineLength:
+  Enabled: true
+  Max: 120 # default is 80
+
 # A calculated magnitude based on number of assignments,
 # branches, and conditions.
 Metrics/AbcSize:
@@ -33,10 +37,6 @@ Metrics/ClassLength:
 # of test cases needed to validate a method.
 Metrics/CyclomaticComplexity:
   Enabled: false
-
-Metrics/LineLength:
-  Enabled: true
-  Max: 120 # default is 80
 
 # Avoid methods longer than 10 lines of code.
 Metrics/MethodLength:

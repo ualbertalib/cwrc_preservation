@@ -72,8 +72,6 @@ module CWRCPreserver
     begin
       Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
-
-        # response = http.request(obj_req)
         http.request obj_req do |response|
           if response.is_a? Net::HTTPSuccess
             # CWRC response need to have the object's modified timestamp in the header
