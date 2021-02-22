@@ -73,8 +73,7 @@ module CWRCPreserver
       Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request obj_req do |response|
-          case response.is_a?
-          when Net::HTTPSuccess
+          if response.is_a? Net::HTTPSuccess
             # CWRC response need to have the object's modified timestamp in the header
             raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
@@ -89,8 +88,6 @@ module CWRCPreserver
             # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
             # to detect transport corruption
             raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
-          when Net::HTTPServerError
-            raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
           else
             raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
           end
