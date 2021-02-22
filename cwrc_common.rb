@@ -73,24 +73,25 @@ module CWRCPreserver
       Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request obj_req do |response|
-          if response.is_a? Net::HTTPSuccess
-            # CWRC response need to have the object's modified timestamp in the header
-            raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
+          raise Net::HTTPError.new(
+            "Failed request #{obj_path} with http status #{response.code}",
+            response.code)
+            unless response.is_a? Net::HTTPSuccess
+        
+          # CWRC response need to have the object's modified timestamp in the header
+          raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
-            cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
-            File.open(cwrc_file, 'wb') do |io|
-              # save HTTP response to working directory: chunk large file
-              response.read_body do |chunk|
-                io.write chunk
-              end
+          cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+          File.open(cwrc_file, 'wb') do |io|
+            # save HTTP response to working directory: chunk large file
+            response.read_body do |chunk|
+              io.write chunk
             end
-
-            # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
-            # to detect transport corruption
-            raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
-          else
-            raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
           end
+
+          # compare md5sum of downloaded with with the HTTP header CWRC-CHECHSUM
+          # to detect transport corruption
+          raise CWRCArchivingError unless response['CWRC-CHECKSUM'].tr('"', '') == Digest::MD5.file(cwrc_file).to_s
         end
       end
     rescue CWRCArchivingError,
