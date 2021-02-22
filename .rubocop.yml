@@ -11,6 +11,7 @@ AllCops:
     - 'tmp/**/*'
     - 'vendor/**/*'
   ExtraDetails: true
+  NewCops: enable
   TargetRubyVersion: 2.5
 
 # readability is Actually Good
@@ -52,6 +53,12 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Naming/FileName:
+  Exclude:
+    - Dangerfile
+    - Rakefile
+    - Gemfile
+
 # indentation is an endangered resource
 Style/ClassAndModuleChildren:
   EnforcedStyle: compact
@@ -59,13 +66,7 @@ Style/ClassAndModuleChildren:
 Style/Documentation:
   Enabled: false
 
-Naming/FileName:
-  Exclude:
-    - Dangerfile
-    - Rakefile
-    - Gemfile
-
-# Checks if there is a magic comment to enforce string literals
+  # Checks if there is a magic comment to enforce string literals
 Style/FrozenStringLiteralComment:
   Enabled: false
 

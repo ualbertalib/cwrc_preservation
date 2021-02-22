@@ -59,8 +59,8 @@ module CWRCPreserver
   # load exception files
   log_dir = ENV['CWRC_PRESERVER_LOG_DIR']
   time_str = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-  except_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVE_FAILED'])
-  success_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVED_OK'])
+  except_file = File.join(log_dir, "#{time_str}_#{ENV['SWIFT_ARCHIVE_FAILED']}")
+  success_file = File.join(log_dir, "#{time_str}_#{ENV['SWIFT_ARCHIVED_OK']}")
   Dir.mkdir(log_dir) unless File.exist?(log_dir)
 
   # working directory
@@ -68,7 +68,7 @@ module CWRCPreserver
   Dir.mkdir(work_dir) unless File.exist?(work_dir)
 
   # setup logger and log level
-  log = Logger.new(STDOUT)
+  log = Logger.new($stdout)
   log.level = if debug_level || ENV['DEBUG'] == 'true'
                 Logger::DEBUG
               else
