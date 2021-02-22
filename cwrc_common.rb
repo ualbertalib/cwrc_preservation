@@ -73,15 +73,15 @@ module CWRCPreserver
       Net::HTTP.start(ENV['CWRC_HOSTNAME'], ENV['CWRC_PORT'],
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request obj_req do |response|
-          raise Net::HTTPError.new(
-                                  "Failed request #{obj_path} with http status #{response.code}",
-                                   response.code
-                                   ) unless response.is_a? Net::HTTPSuccess
-        
+          unless response.is_a? Net::HTTPSuccess
+            raise Net::HTTPError.new("Failed request #{obj_path} with http status #{response.code}", response.code)
+          end
+
           # CWRC response need to have the object's modified timestamp in the header
           raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
           cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+
           File.open(cwrc_file, 'wb') do |io|
             # save HTTP response to working directory: chunk large file
             response.read_body do |chunk|
