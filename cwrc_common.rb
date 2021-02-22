@@ -74,9 +74,9 @@ module CWRCPreserver
                       use_ssl: true, read_timeout: http_read_timeout) do |http|
         http.request obj_req do |response|
           raise Net::HTTPError.new(
-            "Failed request #{obj_path} with http status #{response.code}",
-            response.code)
-            unless response.is_a? Net::HTTPSuccess
+                                  "Failed request #{obj_path} with http status #{response.code}",
+                                   response.code
+                                   ) unless response.is_a? Net::HTTPSuccess
         
           # CWRC response need to have the object's modified timestamp in the header
           raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
