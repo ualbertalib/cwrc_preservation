@@ -149,8 +149,9 @@ module CWRCPreserver
   end
 
   # find the remaining Swift objects that don't have corresponding items in CWRC
-  swift_objs&.each do |key, swift_obj|
+  swift_objs&.each do |swift_id|
+    swift_obj = swift_container.object(swift_id)
     # CSV content
-    puts ",,#{key},#{swift_obj[:last_modified]},#{swift_obj[:bytes]},#{STATUS_I_DEL}"
+    puts ",,#{swift_obj.name},#{swift_obj.metadata['last-mod-timestamp']},#{swift_obj.bytes},#{STATUS_I_DEL}"
   end
 end
