@@ -10,7 +10,9 @@
 # modification time, and size along with a column indicating the preservation
 # status (i.e., indicating if modification time comparison between Swift and
 # CWRC indicates a need for preservation, or if the size of the Swift object
-# is zero, etc)
+# is zero, etc). As content within CWRC is created, updated, or deleted
+# Swift may contain items not in CWRC (i.e., deleted by CWRC), outdated
+# (updated within CWRC) or missing (i.e., newly added to CWRC)
 
 #
 # The output format is CSV with the following header columns:
@@ -34,6 +36,19 @@
 #     -h --help
 #     -s --summary summary output where status in not 'ok'
 #
+
+# TODO: enhance performance while limiting memory usage
+# 1. output swift_container.objects_detail (i.e., no mapping to CWRC object)
+# 2. iterate through swift_container.objects_detail via markers (i.e., pages)
+#    - add CWRC object details
+#    - when finished Swift object list, add remaining CWRC objects not in Swift
+# https://github.com/ruby-openstack/ruby-openstack/wiki/Object-Storage
+# response: "cwrc_0c168793-b1ff-453f-a1f6-e1d75f7350be"=>{
+#    :bytes=>"5939",
+#    :content_type=>"application/x-tar",
+#    :last_modified=>"2018-02-05T06:45:23.422720",
+#    :hash=>"dd2b11f239f7f25fb504519b612cf896"
+#  },
 
 require 'logger'
 require 'optparse'
@@ -84,34 +99,29 @@ module CWRCPreserver
   raise CWRCArchivingError if swift_con.nil?
 
   # query Swift storage for a list of objects
-  # https://github.com/ruby-openstack/ruby-openstack/wiki/Object-Storage
-  # https://github.com/ruby-openstack/ruby-openstack/wiki/Object-Storage
-  # response: "cwrc_0c168793-b1ff-453f-a1f6-e1d75f7350be"=>{
-  #    :bytes=>"5939",
-  #    :content_type=>"application/x-tar",
-  #    :last_modified=>"2018-02-05T06:45:23.422720",
-  #    :hash=>"dd2b11f239f7f25fb504519b612cf896"
-  #  },
-  swift_container = swift_con.swift_connection.container(swift_con.project)
-
   # Iterate via markers
   # https://github.com/ruby-openstack/ruby-openstack/blob/d9c8aa19488062e483771a9168d24f2626fe688b/lib/openstack/swift/container.rb#L100
   # Gotcha: 2021-02-16 - iterating via markers while objects are also added to Swift
   # may lead to a race condition as the container metadata count changes but the
   # the items added while iterating by marker don't get returned by the marker iteration
   # see previous commits for the problematic version
+  swift_container = swift_con.swift_connection.container(swift_con.project)
   swift_count = swift_container.container_metadata[:count].to_i
   swift_objs = swift_container.objects(limit: SWIFT_LIMIT)
   while swift_objs.count < swift_count
     swift_objs += swift_container.objects(limit: SWIFT_LIMIT, marker: swift_objs.last)
   end
+  # TODO: does hash use too much memory?
+  swift_id_hash = Hash[swift_objs.map.with_index.to_a]
 
   # TODO: use CSV gem
   # CSV header
   puts "cwrc_pid (#{cwrc_objs.count}),"\
     "cwrc_mtime (#{Time.now.iso8601}),"\
     "swift_id (#{swift_container.container_metadata[:count]}),"\
-    'swift_timestamp,swift_bytes,status'
+    'swift_timestamp,'\
+    'swift_bytes,'\
+    'status (x=outdated/missing; d=missing in CWRC; s=size suspect)'
 
   # TODO: find a better way to merge CWRC and Swift hashes into an output format
   # for each cwrc object
@@ -120,7 +130,8 @@ module CWRCPreserver
     cwrc_mtime = cwrc_obj['timestamp']
     swift_id = cwrc_pid
 
-    if swift_objs.include?(swift_id)
+    # TODO: .include? slow with 400K items; try bsearch and if not use hash
+    if swift_id_hash.key?(swift_id)
       swift_obj = swift_container.object(swift_id)
       swift_timestamp = swift_obj.metadata['last-mod-timestamp']
       swift_bytes = swift_obj.bytes
