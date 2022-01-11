@@ -11,7 +11,8 @@ AllCops:
     - 'tmp/**/*'
     - 'vendor/**/*'
   ExtraDetails: true
-  TargetRubyVersion: 2.3
+  NewCops: enable
+  TargetRubyVersion: 2.5
 
 # readability is Actually Good
 Layout/EmptyLinesAroundClassBody:
@@ -20,6 +21,10 @@ Layout/EmptyLinesAroundClassBody:
 Layout/IndentationConsistency:
   Enabled: true
   EnforcedStyle: normal
+
+Layout/LineLength:
+  Enabled: true
+  Max: 120 # default is 80
 
 # A calculated magnitude based on number of assignments,
 # branches, and conditions.
@@ -33,10 +38,6 @@ Metrics/ClassLength:
 # of test cases needed to validate a method.
 Metrics/CyclomaticComplexity:
   Enabled: false
-
-Metrics/LineLength:
-  Enabled: true
-  Max: 120 # default is 80
 
 # Avoid methods longer than 10 lines of code.
 Metrics/MethodLength:
@@ -52,6 +53,12 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Naming/FileName:
+  Exclude:
+    - Dangerfile
+    - Rakefile
+    - Gemfile
+
 # indentation is an endangered resource
 Style/ClassAndModuleChildren:
   EnforcedStyle: compact
@@ -59,13 +66,7 @@ Style/ClassAndModuleChildren:
 Style/Documentation:
   Enabled: false
 
-Naming/FileName:
-  Exclude:
-    - Dangerfile
-    - Rakefile
-    - Gemfile
-
-# Checks if there is a magic comment to enforce string literals
+  # Checks if there is a magic comment to enforce string literals
 Style/FrozenStringLiteralComment:
   Enabled: false
 

@@ -59,8 +59,8 @@ module CWRCPreserver
   # load exception files
   log_dir = ENV['CWRC_PRESERVER_LOG_DIR']
   time_str = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-  except_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVE_FAILED'])
-  success_file = File.join(log_dir, time_str + '_' + ENV['SWIFT_ARCHIVED_OK'])
+  except_file = File.join(log_dir, "#{time_str}_#{ENV['SWIFT_ARCHIVE_FAILED']}")
+  success_file = File.join(log_dir, "#{time_str}_#{ENV['SWIFT_ARCHIVED_OK']}")
   Dir.mkdir(log_dir) unless File.exist?(log_dir)
 
   # working directory
@@ -68,7 +68,7 @@ module CWRCPreserver
   Dir.mkdir(work_dir) unless File.exist?(work_dir)
 
   # setup logger and log level
-  log = Logger.new(STDOUT)
+  log = Logger.new($stdout)
   log.level = if debug_level || ENV['DEBUG'] == 'true'
                 Logger::DEBUG
               else
@@ -142,7 +142,7 @@ module CWRCPreserver
     end
 
     file_size = File.size(cwrc_file_tmp_path).to_f / 2**20
-    fs_str = format('%.3f', file_size)
+    fs_str = format('%.3<file_size>f', file_size: file_size)
     log.debug("SIZE: #{fs_str} MB")
     cwrc_time = Time.now
 
@@ -164,9 +164,9 @@ module CWRCPreserver
     FileUtils.rm_rf(cwrc_file_tmp_path) if File.exist?(cwrc_file_tmp_path)
 
     # print statistics
-    dp_rate = format('%.3f', (file_size / (swift_time - start_time)))
-    cwrc_rate = format('%.3f', (file_size / (cwrc_time - start_time)))
-    swift_rate = format('%.3f', (file_size / (swift_time - cwrc_time)))
+    dp_rate = format('%.3<dp_rate>f', dp_rate: (file_size / (swift_time - start_time)))
+    cwrc_rate = format('%.3<cwrc_rate>f', cwrc_rate: (file_size / (cwrc_time - start_time)))
+    swift_rate = format('%.3<swift_rate>f', swift_rate: (file_size / (swift_time - cwrc_time)))
     log.debug("FILE DEPOSITED: #{cwrc_obj['pid']}, deposit rate #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec")
     File.open(success_file, 'a') do |ok_file|
       ok_file.write("#{cwrc_obj['pid']} #{fs_str} MB #{dp_rate} (#{cwrc_rate} #{swift_rate}) MB/sec\n")

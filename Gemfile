@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
 
-gem 'bundler', '~> 1.17'
+gem 'bundler', '~> 2.0'
 gem 'http-cookie'
-gem 'json'
+gem 'json', '>= 2.3.0'
 gem 'logger'
-gem 'rake'
+gem 'rake', '>= 12.3.3'
 gem 'swift_ingest', '~> 0.4.0'
 
 group :development, :test do
