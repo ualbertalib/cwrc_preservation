@@ -37,7 +37,7 @@
 #     -s --summary summary output where status in not 'ok'
 #
 
-# TODO: enhance performance while limiting memory usage
+# TODO: enhance performance while limiting memory usage - doesn't work as need the custom metadata 'last-mod-timestamp'
 # 1. output swift_container.objects_detail (i.e., no mapping to CWRC object)
 # 2. iterate through swift_container.objects_detail via markers (i.e., pages)
 #    - add CWRC object details
@@ -54,6 +54,7 @@ require 'logger'
 require 'optparse'
 require 'time'
 require 'swift_ingest'
+require 'csv'
 
 require_relative 'cwrc_common'
 
@@ -116,12 +117,14 @@ module CWRCPreserver
 
   # TODO: use CSV gem
   # CSV header
-  puts "cwrc_pid (#{cwrc_objs.count}),"\
-    "cwrc_mtime (#{Time.now.iso8601}),"\
-    "swift_id (#{swift_container.container_metadata[:count]}),"\
-    'swift_timestamp,'\
-    'swift_bytes,'\
-    'status (x=outdated/missing; d=missing in CWRC; s=size suspect)'
+  puts CSV.generate_line([
+                           "cwrc_pid (#{cwrc_objs.count})",
+                           "cwrc_mtime (#{Time.now.iso8601})",
+                           "swift_id (#{swift_container.container_metadata[:count]})",
+                           'swift_timestamp metadata[last-mod-timestamp]',
+                           'swift_bytes',
+                           'status (x=outdated/missing; d=missing in CWRC; s=size suspect)'
+                         ])
 
   # TODO: find a better way to merge CWRC and Swift hashes into an output format
   # for each cwrc object
@@ -133,8 +136,9 @@ module CWRCPreserver
     # TODO: .include? slow with 400K items; try bsearch and if not use hash
     if swift_id_hash.key?(swift_id)
       swift_obj = swift_container.object(swift_id)
-      swift_timestamp = swift_obj.metadata['last-mod-timestamp']
-      swift_bytes = swift_obj.bytes
+      swift_obj_metadata = swift_obj.object_metadata
+      swift_timestamp = swift_obj_metadata[:metadata]['last-mod-timestamp']
+      swift_bytes = swift_obj_metadata[:bytes]
       # note: CWRC uses zulu while Swift is local timezone (assumption)
       # If timestamps don't match then report Swift object older than CWRC
       status = if Time.parse(cwrc_mtime) > Time.parse(swift_timestamp)
@@ -155,14 +159,29 @@ module CWRCPreserver
 
     # CSV content
     if !opt_summary_output || (opt_summary_output && status != STATUS_OK)
-      puts "#{cwrc_pid},#{cwrc_mtime},#{swift_id},#{swift_timestamp},#{swift_bytes},#{status}"
+      puts CSV.generate_line([
+                               cwrc_pid,
+                               cwrc_mtime,
+                               swift_id,
+                               swift_timestamp,
+                               swift_bytes,
+                               status
+                             ])
     end
   end
 
   # find the remaining Swift objects that don't have corresponding items in CWRC
   swift_objs&.each do |swift_id|
     swift_obj = swift_container.object(swift_id)
+    swift_obj_metadata = swift_obj.object_metadata
     # CSV content
-    puts ",,#{swift_obj.name},#{swift_obj.metadata['last-mod-timestamp']},#{swift_obj.bytes},#{STATUS_I_DEL}"
+    puts CSV.generate_line([
+                             '',
+                             '',
+                             swift_obj.name,
+                             swift_obj_metadata[:metadata]['last-mod-timestamp'],
+                             swift_obj_metadata[:bytes],
+                             STATUS_I_DEL
+                           ])
   end
 end
