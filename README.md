@@ -1,5 +1,8 @@
 # CWRC Preservation
 
+> :warning: **This command-line script is only compatible with CWRC v1.0** CWRC v2.0 (Islandora v2.0 / Drupal 9+ requires an alternative approach. This repo is minimally supported thus I'm not fixing the URI obsolete warning (`RUBYOPT='-W1'` before the associated command will suppress the warning).
+
+
 The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
 
 The two main applications are:
@@ -28,12 +31,13 @@ The two main applications are:
 
 ```
 # Openstack Swift parameters
-SWIFT_TENANT:
+SWIFT_AUTH_URL:
 SWIFT_USERNAME:
 SWIFT_PASSWORD:
-SWIFT_AUTH_URL:
+SWIFT_USER_DOMAIN_NAME:
 SWIFT_PROJECT_DOMAIN_NAME:
-SWIFT_PROJECT:
+SWIFT_PROJECT_DOMAIN_ID:
+SWIFT_PROJECT_NAME:
 CWRC_SWIFT_CONTAINER:
 CWRC_PROJECT_NAME:
 

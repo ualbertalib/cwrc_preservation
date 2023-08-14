@@ -74,11 +74,11 @@ module CWRCPreserver
               else
                 Logger::INFO
               end
-  log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil?
+  log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil? or start_dt==""
 
   # get connection cookie
   cookie = retrieve_cookie
-  log.debug("Using connecion cookie: #{cookie}")
+  log.debug("CWRC auth: using connection cookie: #{cookie}")
 
   # connect to swift storage
   swift_depositer = connect_to_swift

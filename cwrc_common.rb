@@ -115,12 +115,18 @@ module CWRCPreserver
   end
 
   def self.connect_to_swift
-    SwiftIngest::Ingestor.new(username: ENV['SWIFT_USERNAME'],
+    # https://www.rubydoc.info/gems/openstack/3.3.21/OpenStack/Connection
+    # bundle exec ruby  ./cwrc_preserver.rb -d --config ../secrets_olrc.yml --reprocess log/olrc_test_list
+    SwiftIngest::Ingestor.new(auth_url: ENV['SWIFT_AUTH_URL'],
+                              username: ENV['SWIFT_USERNAME'],
                               password: ENV['SWIFT_PASSWORD'],
-                              tenant: ENV['SWIFT_TENANT'],
-                              auth_url: ENV['SWIFT_AUTH_URL'],
+                              user_domain: ENV['SWIFT_USER_DOMAIN_NAME'],
                               project_name: ENV['SWIFT_PROJECT_NAME'],
-                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
-                              project: ENV['CWRC_PROJECT_NAME'])
+                              project_domain_id: ENV['SWIFT_PROJECT_DOMAIN_ID'],
+                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'], # For UAL Swift compatability (leave blank)
+                              #is_debug: TRUE,
+                              region: ENV['SWIFT_REGION'],
+                              identity_api_version: "3"
+                              )
   end
 end
