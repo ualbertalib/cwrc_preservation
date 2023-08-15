@@ -126,7 +126,8 @@ module CWRCPreserver
                               project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'], # For UAL Swift compatability (leave blank)
                               #is_debug: TRUE,
                               region: ENV['SWIFT_REGION'],
-                              identity_api_version: "3"
+                              identity_api_version: "3",
+                              project: ENV['CWRC_SWIFT_CONTAINER']
                               )
   end
 end
