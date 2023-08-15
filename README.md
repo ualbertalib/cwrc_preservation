@@ -1,6 +1,6 @@
 # CWRC Preservation
 
-> :warning: **This command-line script is only compatible with CWRC v1.0** CWRC v2.0 (Islandora v2.0 / Drupal 9+ requires an alternative approach. This repo is minimally supported thus I'm not fixing the URI obsolete warning (`RUBYOPT='-W1'` before the associated command will suppress the warning).
+> :warning: **This command-line script is only compatible with CWRC v1.0**. The soon to be released CWRC v2.0 (Islandora v2.0 / Drupal 9+) requires an alternative approach. This repo is minimally supported thus I'm not fixing the URI obsolete warning (`RUBYOPT='-W0'` before the associated command will suppress the warning).
 
 
 The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
@@ -13,20 +13,19 @@ The two main applications are:
 ## Workflow
 
 - cwrc_preserver.rb executes at a regular interval
-  - sends request to the CWRC repository with authentication parameters that produces a manifest list of objects residing with the CWRC repository as a response
+  - sends a request to the CWRC repository with authentication parameters that produces a manifest list of objects residing with the CWRC repository as a response
   - for each CWRC repository object, inspect the preserved object
     - if the preserved copy does not exist or is outdated (comparing CWRC manifest timestamp to the timestamp on the preserved copy, the swift object custom metadata field 'last-mod-timestamp'), request a new AIP (Bag) from the CWRC repository and deposit within the preservation environment
 - generate an audit report via cwrc_audit_report.rb
-  - sends request to CWRC repository with authentication parameters to produce a manifest list of objects residing with the CWRC repository
-  - sends request to preservation environment with authentication parameters to produce a manifest list of objects residing with the preservation environment
+  - sends a request to CWRC repository with authentication parameters to produce a manifest list of objects residing with the CWRC repository
+  - sends a request to preservation environment with authentication parameters to produce a manifest list of objects residing with the preservation environment
   - merge lists and output as a CSV file for interpretation / review (e.g., within a spreadsheet tool)
 
 ## Requirements
 
 - Ruby 2.3+
-
+- Associated Gems via `bundle install`
 - CWRC API endpoint: https://github.com/cwrc/islandora_bagit_extension
-
 - Configuration file - use [secrets_example.yml](secrets_example.yml) as a starting point and the `-C --config PATH` to specify the config file to utilize.
 
 ```
@@ -111,6 +110,31 @@ Example #3 - process objects via a list and with a forced update (i.e., deposit 
 ```shell
 ./cwrc_preserver.rb -d --config="/opt/conf/cwrc_preserver_conf.yml" --reprocess=/tmp/cwrc_pid_list_one_per_line | tee /tmp/stdout_debug.txt
 ```
+
+#### Results in Swift
+
+Note the custom Swift object metadata item `Last-Mod-Timestamp`, this is the cwrc.ca Islandora7 last modification timestamp on the object (used by the audit to as on factor in determining whether or not the Swift instance needs to be updated). 
+
+``` bash
+$ swift stat cwrc-test islandora:root
+                  Account: AUTH_0d17ddb0b6834fc5be902e1a2df6f17b
+                Container: cwrc-test
+                   Object: islandora:root
+             Content Type: application/x-tar
+           Content Length: 10083
+            Last Modified: Tue, 15 Aug 2023 15:08:50 GMT
+                     ETag: 04009a3f93fd2c9b38706bddda4f86ea
+          Meta Project-Id: islandora:root
+             Meta Promise: bronze
+         Meta Aip-Version: 1.0
+  Meta Last-Mod-Timestamp: 2018-05-16T14:36:26.691Z
+              X-Timestamp: 1692112129.62648
+            Accept-Ranges: bytes
+               X-Trans-Id: txa72dc123c3784c959fa89-0064db97f9
+   X-Openstack-Request-Id: txa72dc123c3784c959fa89-0064db97f9
+Strict-Transport-Security: max-age=15768000
+```
+
 
 <a name="cwrc_audit_report.rb"/>
 
