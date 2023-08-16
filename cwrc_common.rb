@@ -4,6 +4,8 @@ require 'net/http'
 require 'json'
 require 'http-cookie'
 
+require_relative 'ingestor'
+
 module CWRCPreserver
   class CWRCArchivingError < StandardError; end
 
@@ -53,7 +55,9 @@ module CWRCPreserver
 
     raise CWRCArchivingError unless all_obj_response.is_a? Net::HTTPSuccess
 
-    all_obj_response.body.slice! timestamp
+    # 2023-08-16: I don't think this is needed - if input is '2023-07-15' then first item in the json body
+    # is changed from "2023-07-15T23:06:50.145Z" to "T23:06:50.145Z"
+    # all_obj_response.body.slice! timestamp
     JSON.parse(all_obj_response.body)['objects']
   end
 
@@ -123,11 +127,11 @@ module CWRCPreserver
                               user_domain: ENV['SWIFT_USER_DOMAIN_NAME'],
                               project_name: ENV['SWIFT_PROJECT_NAME'],
                               project_domain_id: ENV['SWIFT_PROJECT_DOMAIN_ID'],
-                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'], # For UAL Swift compatability (leave blank)
-                              #is_debug: TRUE,
+                              # For UAL Swift compatability (leave blank)
+                              project_domain_name: ENV['SWIFT_PROJECT_DOMAIN_NAME'],
+                              # is_debug: TRUE,
                               region: ENV['SWIFT_REGION'],
-                              identity_api_version: "3",
-                              project: ENV['CWRC_SWIFT_CONTAINER']
-                              )
+                              identity_api_version: '3',
+                              project: ENV['CWRC_SWIFT_CONTAINER'])
   end
 end

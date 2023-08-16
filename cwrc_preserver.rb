@@ -10,10 +10,10 @@
 #    -s, --start=val       process subset of material: objects modified after specified ISO-8601 YYY-MM-DD <timestamp>
 #    -h, --help
 
-require 'swift_ingest'
 require 'optparse'
 require 'logger'
 require 'time'
+require_relative 'ingestor'
 require_relative 'cwrc_common'
 
 module CWRCPreserver
@@ -74,7 +74,7 @@ module CWRCPreserver
               else
                 Logger::INFO
               end
-  log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil? or start_dt==""
+  log.debug("Retrieving all objects modified since: #{start_dt}") unless start_dt.nil? || start_dt.empty?
 
   # get connection cookie
   cookie = retrieve_cookie
@@ -106,9 +106,12 @@ module CWRCPreserver
     # check if file has been deposited, handle open stack bug causing exception in openstack/connection
     force_deposit = false || !reprocess.empty?
     begin
-      # TODO: switch to swift_depositer.lookup once Gem updated
-      swift_file = swift_depositer.get_file_from_swit(cwrc_obj['pid'], ENV['CWRC_SWIFT_CONTAINER']) unless force_deposit
-      log.debug("SWIFT LOOKUP: #{swift_file.nil? ? 'not found' : swift_file.metadata['last-mod-timestamp']}")
+      # if force_deposit then skip lookup of existing
+      unless force_deposit
+        # TODO: switch to swift_depositer.lookup once Gem updated
+        swift_file = swift_depositer.get_file_from_swit(cwrc_obj['pid'], ENV['CWRC_SWIFT_CONTAINER'])
+        log.debug("SWIFT LOOKUP: #{swift_file.nil? ? 'not found' : swift_file.metadata['last-mod-timestamp']}")
+      end
     rescue StandardError => e
       force_deposit = true
       log.debug("Force deposit in swift: #{cwrc_obj['pid']} #{e.message}")
@@ -150,6 +153,7 @@ module CWRCPreserver
     begin
       # TODO: switch to swift_depositer.deposit once Gem updated
       swift_depositer.deposit_file(cwrc_file_tmp_path,
+                                   'application/zip',
                                    ENV['CWRC_SWIFT_CONTAINER'],
                                    last_mod_timestamp: cwrc_obj['timestamp'])
     rescue StandardError => e
