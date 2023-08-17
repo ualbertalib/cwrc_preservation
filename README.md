@@ -1,9 +1,8 @@
 # CWRC Preservation
 
-> :warning: **This command-line script is only compatible with CWRC v1.0**. The soon to be released CWRC v2.0 (Islandora v2.0 / Drupal 9+) requires an alternative approach. This repo is minimally supported thus I'm not fixing the URI obsolete warning (`RUBYOPT='-W0'` before the associated command will suppress the warning).
+> :warning: **These command-line scripts are only compatible with CWRC v1.0**. The next release of CWRC (Islandora v2.0 / Drupal 9+) renders these scripts obsolete therefore this repo is minimally supported and my plan is to not fix the URI obsolete warning (`RUBYOPT='-W0'` before the associated command will suppress the warning) plus limit code clean-up.
 
-
-The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
+The CWRC Preservation toolkit contains Ruby applications for preserving content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
 
 The two main applications are:
 
@@ -28,7 +27,7 @@ The two main applications are:
 - CWRC API endpoint: https://github.com/cwrc/islandora_bagit_extension
 - Configuration file - use [secrets_example.yml](secrets_example.yml) as a starting point and the `-C --config PATH` to specify the config file to utilize.
 
-```
+``` txt
 # Openstack Swift parameters
 SWIFT_AUTH_URL:
 SWIFT_USERNAME:
@@ -80,7 +79,7 @@ Common usage:
 - query CWRC repository items modified since a given date/time and preserve if needed (example #2)
 - pass defined list of items and force preservation (example #3)
 
-```
+``` txt
 Usage: cwrc_preserver [options]
 
 options:
@@ -113,14 +112,14 @@ Example #3 - process objects via a list and with a forced update (i.e., deposit 
 
 #### Results in Swift
 
-Note the custom Swift object metadata item `Last-Mod-Timestamp`, this is the cwrc.ca Islandora7 last modification timestamp on the object (used by the audit to as on factor in determining whether or not the Swift instance needs to be updated). 
+Note the custom Swift object metadata item `Last-Mod-Timestamp`, this is the cwrc.ca Islandora7 last modification timestamp on the object (used by the audit to as on factor in determining whether or not the Swift instance needs to be updated).
 
 ``` bash
 $ swift stat cwrc-test islandora:root
                   Account: AUTH_0d17ddb0b6834fc5be902e1a2df6f17b
                 Container: cwrc-test
                    Object: islandora:root
-             Content Type: application/x-tar
+             Content Type: application/zip
            Content Length: 10083
             Last Modified: Tue, 15 Aug 2023 15:08:50 GMT
                      ETag: 04009a3f93fd2c9b38706bddda4f86ea
@@ -140,7 +139,7 @@ Strict-Transport-Security: max-age=15768000
 
 ### Reporting / Auditing: cwrc_audit_report.rb
 
-# ![Audit System Diagram (PNG 50px/cm)](docs/images/cwrc_preservation_audit.png)
+## ![Audit System Diagram (PNG 50px/cm)](docs/images/cwrc_preservation_audit.png)
 
 ```shell
 Usage: cwrc_audit_report [options]
