@@ -153,7 +153,7 @@ module CWRCPreserver
     begin
       # TODO: switch to swift_depositer.deposit once Gem updated
       swift_depositer.deposit_file(cwrc_file_tmp_path,
-                                   'application/zip',
+                                   cwrc_obj['content-type'],
                                    ENV['CWRC_SWIFT_CONTAINER'],
                                    last_mod_timestamp: cwrc_obj['timestamp'])
     rescue StandardError => e

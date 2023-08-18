@@ -85,6 +85,7 @@ module CWRCPreserver
           raise CWRCArchivingError if response['CWRC-MODIFIED-DATE'].nil?
 
           cwrc_obj['timestamp'] = response['CWRC-MODIFIED-DATE'].tr('"', '')
+          cwrc_obj['content-type'] = response['Content-Type'].tr('"', '')
 
           File.open(cwrc_file, 'wb') do |io|
             # save HTTP response to working directory: chunk large file
