@@ -8,7 +8,9 @@
 #   --id_list ${id_LIST} \
 #   --tmp_dir ${TMP_DIR} \
 #   --container_src ${} \
-#   --container_dst ${}
+#   --container_dst ${} \
+#   --uploaded_by ${}  \
+#   --database_csv ${}
 # https://docs.openstack.org/python-swiftclient/latest/service-api.html
 # https://docs.openstack.org/swift/pike/overview_large_objects.html#additional-notes
 # https://docs.openstack.org/python-swiftclient/latest/service-api.html
@@ -18,6 +20,8 @@
 ##############################################################################################
 
 import argparse
+import csv
+import hashlib
 import logging
 import os
 import sys
@@ -36,6 +40,8 @@ def parse_args(args):
     parser.add_argument('--tmp_dir', required=True, help='Temporary directory (must exist; used for tar).')
     parser.add_argument('--container_src', required=True, help='Source container name.')
     parser.add_argument('--container_dst', required=True, help='Destination container name.')
+    parser.add_argument('--uploaded_by', required=True, help='Name of person running the script.')
+    parser.add_argument('--database_csv', required=True, help='Name of the log file to store the uploaded item information.')
     return parser.parse_args(args)
 
 
@@ -110,6 +116,57 @@ def validate(swift_conn_src, container_src, swift_conn_dst, container_dst, id, e
 
 
 #
+def file_checksum(path):
+    hash_md5 = hashlib.md5()
+    hash_sha256 = hashlib.sha256()
+    with open(path, 'rb') as f:
+        # read and buffer to prevent high memory usage
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+            hash_sha256.update(chunk)
+    return {
+        'md5sum': hash_md5.hexdigest(),
+        'sha256sum': hash_sha256.hexdigest()
+    }
+
+
+#
+def validate_checksum(path, etag, id):
+    checksums = file_checksum(path)
+    if checksums['md5sum'] != etag:
+        raise ClientException(f"ERROR: id:[{id}] error: checksum failure [{path}] - {checksums['md5sum']} <> {etag}")
+    return checksums
+
+
+#
+def build_swift_upload_object(src_item, container_src):
+    # Custom headers: https://github.com/ualbertalib/swift_ingest/blob/master/lib/swift_ingest/ingestor.rb#L18
+    options = {
+        'header': {
+            'x-object-meta-project-id': src_item['response_dict']['headers']['x-object-meta-project-id'],
+            'x-object-meta-aip-version': src_item['response_dict']['headers']['x-object-meta-aip-version'],
+            'x-object-meta-project': src_item['response_dict']['headers']['x-object-meta-project'],
+            'x-object-meta-promise': src_item['response_dict']['headers']['x-object-meta-promise'],
+            'content-type': src_item['response_dict']['headers']['content-type']
+        }
+    }
+    # Custom CWRC metadata used by auditing processes; CWRC platform object last update timestamp
+    # CWRC content-type fix (source Swift used x-tar when content is zip)
+    if container_src == 'CWRC':
+        # could use |= to combine dict structures but aiming for Python 3.5
+        options['header']['x-object-meta-last-mod-timestamp'] = src_item['response_dict']['headers']['x-object-meta-last-mod-timestamp']
+        options['header']['content-type'] = 'application/zip'
+
+    upload_obj = SwiftUploadObject(
+        src_item['path'],
+        object_name=src_item['object'],
+        options=options
+    )
+
+    return upload_obj
+
+
+#
 def download_from_source(swift_conn_src, container_src, id):
     if type(id) is not list:
         id = [id]
@@ -125,53 +182,53 @@ def download_from_source(swift_conn_src, container_src, id):
         if not src_item['success']:
             raise ClientException(f"ERROR: id:[{id}] error: {src_item['error']}")
 
-        # Custom headers: https://github.com/ualbertalib/swift_ingest/blob/master/lib/swift_ingest/ingestor.rb#L18
-        options = {
-            'header': {
-                'x-object-meta-project-id': src_item['response_dict']['headers']['x-object-meta-project-id'],
-                'x-object-meta-aip-version': src_item['response_dict']['headers']['x-object-meta-aip-version'],
-                'x-object-meta-project': src_item['response_dict']['headers']['x-object-meta-project'],
-                'x-object-meta-promise': src_item['response_dict']['headers']['x-object-meta-promise'],
-                'content-type': src_item['response_dict']['headers']['content-type']
-            }
-        }
-        # Custom CWRC metadata used by auditing processes; CWRC platform object last update timestamp
-        # CWRC content-type fix (source Swift used x-tar when content is zip)
-        if container_src == 'CWRC':
-            # could use |= to combine dict structures but aiming for Python 3.5
-            options['header']['x-object-meta-last-mod-timestamp'] = src_item['response_dict']['headers']['x-object-meta-last-mod-timestamp']
-            options['header']['content-type'] = 'application/zip'
+        dst_objs.append(build_swift_upload_object(src_item, container_src))
 
-        upload_obj = SwiftUploadObject(
-            src_item['path'],
-            object_name=src_item['object'],
-            options=options
-        )
-        dst_objs.append(upload_obj)
+        # test download file against Swift header etag to verify
+        validate_checksum(src_item['path'], src_item['response_dict']['headers']['etag'], id)
 
     return dst_objs
 
 
+#
+def log_upload(db_writer, dst_item, container_dst, checksums, uploaded_by):
+    db_dict = {
+        'id': dst_item['object'],
+        'md5sum': checksums['md5sum'],
+        'sha256sum': checksums['sha256sum'],
+        'uploaded_by': uploaded_by,
+        'last_updated_at': dst_item['response_dict']['headers']['last-modified'],
+        'container_name': container_dst,
+        'notes': ""
+    }
+    db_writer.writerow(db_dict)
+
+
 # upload to Swift and remove temporary file
-def upload_to_destination(swift_conn_dst, container_dst, dst_objs):
+def upload_to_destination(swift_conn_dst, container_dst, dst_objs, db_writer, uploaded_by):
     for dst_item in swift_conn_dst.upload(container_dst, dst_objs):
         if dst_item['action'] == 'upload_object':
             logging.info(f"{dst_item}")
         if not dst_item['success']:
             if 'object' in dst_item:
                 logging.error(f"{dst_item}")
-                raise SwiftError(dst_item['error'], container_dst, id)
+                raise SwiftError(dst_item['error'], container_dst, dst_item['object'])
             # Swift segmented object
             elif 'for_object' in dst_item:
                 logging.error(f"{dst_item}")
-                raise SwiftError(dst_item['error'], container_dst, id, dst_item['segment_index'])
-        # remove temporary file
+                raise SwiftError(dst_item['error'], container_dst, dst_item['object'], dst_item['segment_index'])
+
         if dst_item['action'] == 'upload_object' and os.path.isfile(dst_item['path']):
+            # test upload file against Swift header etag to verify
+            checksums = validate_checksum(dst_item['path'], dst_item['response_dict']['headers']['etag'], dst_item['object'])
+            # log upload
+            log_upload(db_writer, dst_item, container_dst, checksums, uploaded_by)
+            # remove temporary file
             os.remove(dst_item['path'])
 
 
 #
-def process(args, swift_conn_src, swift_conn_dst):
+def process(args, swift_conn_src, swift_conn_dst, db_writer):
 
     # get list of items
     try:
@@ -180,7 +237,7 @@ def process(args, swift_conn_src, swift_conn_dst):
                 id = line.strip()
                 print(id)
                 dst_objs = download_from_source(swift_conn_src, args.container_src, id)
-                upload_to_destination(swift_conn_dst, args.container_dst, dst_objs)
+                upload_to_destination(swift_conn_dst, args.container_dst, dst_objs, db_writer, args.uploaded_by)
                 validate(swift_conn_src, args.container_src, swift_conn_dst, args.container_dst, id)
 
     except ClientException as e:
@@ -208,7 +265,18 @@ def main():
 
     with SwiftService(options=options) as swift_conn_dest:
         swift_conn_src = swift_init_src(args.swift_src_config_path, args.tmp_dir)
-        process(args, swift_conn_src, swift_conn_dest)
+        with open(args.database_csv, 'w', newline='') as db_file:
+            db_writer = csv.DictWriter(db_file, fieldnames=[
+                'id',                # (avalon noid)
+                'md5sum',
+                'sha256sum',
+                'uploaded_by',
+                'last_updated_at',
+                'container_name',
+                'notes'
+            ])
+            db_writer.writeheader()
+            process(args, swift_conn_src, swift_conn_dest, db_writer)
 
 
 if __name__ == "__main__":
