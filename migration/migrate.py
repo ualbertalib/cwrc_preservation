@@ -173,9 +173,9 @@ def download_from_source(swift_conn_src, container_src, id):
 
     # download the Swift object from the source Swift instance
     src_objs = swift_conn_src.download(container_src, id)
-    dst_objs = []
 
     # build SwiftUploadObject from download response
+    dst_objs = []
     for src_item in src_objs:
 
         logging.info(f"{src_item}")
@@ -244,6 +244,24 @@ def process(args, swift_conn_src, swift_conn_dst, db_writer):
         logging.error(e)
     # except Exception as e:
         # logging.error(e)
+    finally:
+        db_writer.flush()
+        os.fsync()
+
+
+#
+def csv_init(fd):
+    db_writer = csv.DictWriter(fd, fieldnames=[
+        'id',                # (avalon noid)
+        'md5sum',
+        'sha256sum',
+        'uploaded_by',
+        'last_updated_at',
+        'container_name',
+        'notes'
+    ])
+    db_writer.writeheader()
+    return db_writer
 
 
 #
@@ -266,16 +284,8 @@ def main():
     with SwiftService(options=options) as swift_conn_dest:
         swift_conn_src = swift_init_src(args.swift_src_config_path, args.tmp_dir)
         with open(args.database_csv, 'w', newline='') as db_file:
-            db_writer = csv.DictWriter(db_file, fieldnames=[
-                'id',                # (avalon noid)
-                'md5sum',
-                'sha256sum',
-                'uploaded_by',
-                'last_updated_at',
-                'container_name',
-                'notes'
-            ])
-            db_writer.writeheader()
+            db_writer = csv_init(db_file)
+
             process(args, swift_conn_src, swift_conn_dest, db_writer)
 
 
