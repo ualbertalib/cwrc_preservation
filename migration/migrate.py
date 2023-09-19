@@ -242,11 +242,10 @@ def process(args, swift_conn_src, swift_conn_dst, db_writer):
 
     except ClientException as e:
         logging.error(e)
-    # except Exception as e:
-        # logging.error(e)
-    finally:
-        db_writer.flush()
-        os.fsync()
+    except SwiftError as e:
+        logging.error(e)
+    except Exception as e:
+        logging.error(e)
 
 
 #
@@ -287,6 +286,7 @@ def main():
             db_writer = csv_init(db_file)
 
             process(args, swift_conn_src, swift_conn_dest, db_writer)
+            os.fsync(db_file)
 
 
 if __name__ == "__main__":
