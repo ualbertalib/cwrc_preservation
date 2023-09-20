@@ -141,21 +141,24 @@ def validate_checksum(path, etag, id):
 #
 def build_swift_upload_object(src_item, container_src):
     # Custom headers: https://github.com/ualbertalib/swift_ingest/blob/master/lib/swift_ingest/ingestor.rb#L18
+    src_headers = src_item['response_dict']['headers']
     options = {
         'header': {
-            'x-object-meta-project-id': src_item['response_dict']['headers']['x-object-meta-project-id'],
-            'x-object-meta-aip-version': src_item['response_dict']['headers']['x-object-meta-aip-version'],
-            'x-object-meta-project': src_item['response_dict']['headers']['x-object-meta-project'],
-            'x-object-meta-promise': src_item['response_dict']['headers']['x-object-meta-promise'],
-            'content-type': src_item['response_dict']['headers']['content-type']
+            'x-object-meta-project-id': src_headers['x-object-meta-project-id'] if 'x-object-meta-project-id' in src_headers else '',
+            'x-object-meta-aip-version': src_headers['x-object-meta-aip-version'] if 'x-object-meta-aip-version' in src_headers else '',
+            'x-object-meta-project': src_headers['x-object-meta-project']  if 'x-object-meta-project' in src_headers else '',
+            'x-object-meta-promise': src_headers['x-object-meta-promise'] if 'x-object-meta-promise' in src_headers else '',
+            'content-type': src_headers['content-type'] if 'content-type' in src_headers else ''
         }
     }
     # Custom CWRC metadata used by auditing processes; CWRC platform object last update timestamp
     # CWRC content-type fix (source Swift used x-tar when content is zip)
     if container_src == 'CWRC':
         # could use |= to combine dict structures but aiming for Python 3.5
-        options['header']['x-object-meta-last-mod-timestamp'] = src_item['response_dict']['headers']['x-object-meta-last-mod-timestamp']
+        options['header']['x-object-meta-last-mod-timestamp'] = src_headers['x-object-meta-last-mod-timestamp']
         options['header']['content-type'] = 'application/zip'
+        # cleanup June 2023 missing meta-project - always CWRC
+        options['header']['x-object-meta-project'] = container_src
 
     upload_obj = SwiftUploadObject(
         src_item['path'],
