@@ -133,6 +133,6 @@ module CWRCPreserver
                               # is_debug: TRUE,
                               region: ENV['SWIFT_REGION'],
                               identity_api_version: '3',
-                              project: ENV['CWRC_SWIFT_CONTAINER'])
+                              project: ENV['CWRC_PROJECT_NAME'])
   end
 end
