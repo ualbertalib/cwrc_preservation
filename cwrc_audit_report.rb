@@ -106,7 +106,7 @@ module CWRCPreserver
   # may lead to a race condition as the container metadata count changes but the
   # the items added while iterating by marker don't get returned by the marker iteration
   # see previous commits for the problematic version
-  swift_container = swift_con.swift_connection.container(swift_con.project)
+  swift_container = swift_con.swift_connection.container(ENV['CWRC_SWIFT_CONTAINER'])
   swift_count = swift_container.container_metadata[:count].to_i
   swift_objs = swift_container.objects(limit: SWIFT_LIMIT)
   while swift_objs.count < swift_count
