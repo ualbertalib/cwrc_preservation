@@ -97,15 +97,15 @@ def validate(swift_conn_src, container_src, swift_conn_dst, container_dst, id, e
             for key in src['headers']:
                 if key not in exceptions:
                     if key not in dst['headers']:
-                        logging.error(f"{key} not present in destination: {src['headers'][key]}")
+                        logging.error(f"id:[{id}] key:[{key}] not present in destination: {src['headers'][key]}")
                         # raise SwiftError(f"{key} not present in destination: {src['headers'][key]}", container_dst, id)
                     elif container_src == 'CWRC' and key == 'content-type' and dst['headers'][key] == 'application/zip':
-                        logging.info(f"{key} differs; this is expected in CWRC due to bulk change - destination {dst['headers'][key]}")
+                        logging.info(f"id:[{id}] key:[{key}] differs; this is expected in CWRC due to bulk change - destination {dst['headers'][key]}")
                     elif src['headers'][key] != dst['headers'][key]:
-                        logging.error(f"{key} differs {src['headers'][key]} <> {dst['headers'][key]}")
+                        logging.error(f"id:[{id}] key:[{key}] differs - {src['headers'][key]} <> {dst['headers'][key]}")
                         # raise SwiftError(f"{key} differs: {src['headers'][key]} <> {dst['headers'][key]}", container_dst, id)
                     else:
-                        logging.info(f"{key} matches {src['headers'][key]} == {dst['headers'][key]}")
+                        logging.info(f"id:[{id}] key:[{key}] matches - {src['headers'][key]} == {dst['headers'][key]}")
 
 
 #

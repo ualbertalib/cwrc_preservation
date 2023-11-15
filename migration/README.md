@@ -35,7 +35,7 @@ python3 migration/migrate.py --swift_src_config_path ../secret_ual.yml --id_list
 * test counts
 * run the `cwrc_audit_report.rb`
   * audit migrated Swift content comparing one Swift instance to a second
-  * see script for details
+  * see the script for details
 * run the 4-week preservation side-by-side old and new and compare the output
 
 ## Tests
