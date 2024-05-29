@@ -18,6 +18,8 @@ This code is replaced by:
 
 ## Overview
 
+> :warning: **These command-line scripts are only compatible with CWRC v1.0**. The next release of CWRC (Islandora v2.0 / Drupal 9+) renders these scripts obsolete therefore this repo is minimally supported and my plan is to not fix the URI obsolete warning (`RUBYOPT='-W0'` before the associated command will suppress the warning) plus limit code clean-up.
+
 The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
 
 The two main applications are:
