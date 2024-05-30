@@ -1,5 +1,25 @@
 # CWRC Preservation
 
+---
+
+**Note:**
+
+**This script is end-of-life circa June 30, 2024.** The last used code is in [OLRC Migration branch](https://github.com/ualbertalib/cwrc_preservation/tree/jefferya/olrc_migration)
+
+In 2017, Alex Strilets, then with DI, created the first version of the scripts used to preserve CWRC in UAL's OpenStack Swift. With the pending CWRC migration to Repository v2 (aka LEAF), the current preservation code will be obsolete (i.e., this codebase is not compatible with the new version).
+
+This code is replaced by:
+
+1. Archival Information Package (BAG) generation via [Islandora Bagger](https://github.com/mjordan/islandora_bagger) that sits outside the Islandora / Drupal platform (as a microservice) and facilitates the creation of archival information packages in the form of Bags conforming to version 1.0 of the BagIt specification
+
+2. LEAF and OLRC Connector [LEAF Bagger](https://github.com/cwrc/leaf-isle-bagger): a container that shepherds the CWRC content from the LEAF software into the Islandora Bagger and into OLRC Swift. A simple audit script is also included.
+
+---
+
+## Overview
+
+> :warning: **These command-line scripts are only compatible with CWRC v1.0**. The next release of CWRC (Islandora v2.0 / Drupal 9+) renders these scripts obsolete therefore this repo is minimally supported and my plan is to not fix the URI obsolete warning (`RUBYOPT='-W0'` before the associated command will suppress the warning) plus limit code clean-up.
+
 The CWRC Preservation toolkit contains Ruby applications for preserve content from the CWRC (cwrc.ca) repository. The primary objective is to manage the flow of content from the CWRC repository into an OpenStack Swift repository for preservation. Also, the repository provides an application to audit the contents of the source and preserved objects. The preservation tool is meant to run behind a firewall thus pulling content from CWRC.
 
 The two main applications are:
